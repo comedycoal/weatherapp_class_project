@@ -5,9 +5,12 @@ import threading
 import logging
 import socket
 import time
+import enum
 import os
 import queue
 from pathlib import Path
+from client import ClientProgram
+from enum import Enum
 
 from weather_data_handler import *
 from user_data_handler import *
@@ -46,33 +49,77 @@ log.addHandler(c_handler)
 
 
 #-------------------- Threaded decorator --------------------#
-def threaded(func):
+def threaded(func) -> threading.Thread:
     def wrapper(*args, **kwargs):
         thread = threading.Thread(target=func, args=args, kwargs=kwargs, daemon=False)
         thread.start()
         return thread
     return wrapper
 
-def threaded_daemon(func):
+def threaded_daemon(func) -> threading.Thread:
     def wrapper(*args, **kwargs):
         thread = threading.Thread(target=func, args=args, kwargs=kwargs, daemon=True)
         thread.start()
         return thread
     return wrapper
 
-#-------------------- ClientHandler --------------------#
-class ClientHandler:
+
+class MessagingHandler:
+    '''
+    Class for handling messages to a client and back via a socket.
+    Its message takes the form of: [HEADER - 8 bytes][ID - 2 bytes] <Actual Message>
+
+    Messages are sent ad-hoc with SendMessage method while received messages are put to an external queue (see ListenForRequests method)
+    
+    Static Attributes:
+        UniversalRequestQueue (queue.Queue):
+            A common Queue for all objects of the class to put received messages, if configured to
+            Set up a Queue object prior to create any objects of this class if you plan to have a common request queue.
+        ServerDisconnectionEvent (threading.Event):
+            A common Event for all objects of the class for additional control from the server program
+            Set up an Event object prior to create any objects of this class.
+
+    Attributes:
+        id (int):
+            an id for external identification purposes
+        socket (socket.socket):
+            the communication socket, will be closed once the destructor is called
+        replyQueue (queue.Queue):
+            
+    '''
+
     UniversalRequestQueue = None
     ServerDisconnectionEvent = None
-    def __init__(self, id, clientSocket, addr):
+
+    @staticmethod
+    def Reset():
+        '''
+        Reset class attributes to None
+        Only call this method after all objects of this class has been destroyed or handled properly
+        '''
+        MessagingHandler.UniversalRequestQueue = None
+        MessagingHandler.ServerDisconnectionEvent = None
+
+    def __init__(self, id:int, clientSocket:socket.socket, addr):
+        '''
+        Constructor for MessagingHandler object
+
+        Parameters:
+            id (int): 
+                an id assigned by the server program for identification purposes
+                The constructor is not responsible of ensuring the id is unique
+            socket (socket.socket):
+                The communication socket returned by a call to serverSocket.accept beforehand
+                Upon destroying the object this socket will automatically be closed
+            address (str):
+                The address of the socket returned with a call to serverSocket.accept beforehand
+            clientDisconnectionEvent (threading.Event):
+                An event, flagged when the client wants to disconnect
+        '''
         self.id = id
         self.socket = clientSocket
         self.address = addr
-        self.repliesAwaiting = 0
-
-        self.replyQueue = queue.Queue()
-        self.clientDisconnectionEvent = threading.Event()
-        log.info(f'New client handler with id {id} for {self.address}')
+        log.info(f'New messaging handler with id {id} for {self.address}')
 
     def __del__(self):
         self.socket.close()
@@ -83,9 +130,12 @@ class ClientHandler:
         Send a message to client
         
         Parameters:
-
+            message (bytes):
+                A message in bytes
         Returns:
-
+            status (bool):
+                True if the message is sent without any server side or connection issues
+                False if any errors occured, and logs traceback in module level's log file
         '''
         bytes_sent = 0
         try:
@@ -111,9 +161,23 @@ class ClientHandler:
         return False
     
     @threaded
-    def ListenForRequests(self):
+    def ListenForRequests(self, requestQueue:queue.Queue=None):
         '''
+        Threaded - Enable message listening mechanism for a handler
+
+        The method actively listens for requests
+        The method terminates if:
+            - The connection is lost
+            - The server wants to disconnect, this will only happens once the client confirms with a specific message
+            - the client wants to disconnect (via a message), this will happens once a specific message is received, regardless of unsent replies
+
+        Parameters:
+            requestQueue (queue.Queue):
+                The queue for requests to be put in for processing
+                Default is None.
+                If None, this object will use the class level UniversalRequestQueue to put in requests
         '''
+        reqQueue = requestQueue if requestQueue else MessagingHandler.UniversalRequestQueue
         log.info(f"Client {self.id} has started listening for requests")
         while True:
             message = None
@@ -134,20 +198,20 @@ class ClientHandler:
                         message = b''.join(chunks)
                         log.info(f"Client handler {self.id} has received message of length {length}")
             except ConnectionResetError as e:
-                # This thread now should close
-                self.clientDisconnectionEvent.set()
+                # This thread should now close
+                reqQueue.put((self.id, b'DISCONNECT'))
                 log.exception(f"Abrupt disconnection occured while listening for client {self.id}'s requests. The connection will effectively close")
                 break
             except Exception as e:
                 # Please handle errors
-                # Remember to catch "no connection" exception first (what is it called again?)
                 log.exception(f"Exception occured on client {self.id}'s listening thread")
+
             # Now that we have a request
-            # 1. If the request is "CONFIRM DISCONNECTION" AND server_disconnect Event is set
-            #   It means the server has previously sent a request to disconnect and client has confirm disconnection
-            #   -> Break
             if message:
-                if ClientHandler.ServerDisconnectionEvent.is_set() and message == b'CONFIRM DISCONNECTION':
+                # 1. If the request is "CONFIRM DISCONNECTION" AND server_disconnect Event is set
+                #   It means the server has previously sent a request to disconnect and client has confirm disconnection
+                #   -> Break
+                if MessagingHandler.ServerDisconnectionEvent.is_set() and message == b'CONFIRM DISCONNECTION':
                     log.info(f"Client {self.id} at {self.address} has confirmed disconnection for server.")
                     break
 
@@ -157,11 +221,11 @@ class ClientHandler:
                 # Maybe?
                 elif message == b'DISCONNECT':
                     log.info(f"Client {self.id} at {self.address} has queued for disconnection.")
-                    self.clientDisconnectionEvent.set()
+                    reqQueue.put((self.id, message))
                     break
 
                 # 3. Any other messages: Pass it down to UniversalRequestQueue
-                ClientHandler.UniversalRequestQueue.put((self.id, message))
+                reqQueue.put((self.id, message))
                 log.info(f"Client handler {self.id} has posted of length {length} to the process queue")
                 
             # Go back to listening
@@ -192,7 +256,19 @@ class ServerProgram:
             a UserDataHandler object, used for logins and registerations.
         adminWeatherHandler:
             a WeatherDataModifier object, used for an admin to modify the weather data
+        universalRequestQueue (queue.Queue):
+            a request queue (id, request) for structured requests from clients
+        serverDisconnectionEvent (threading.Event):
+            an event signals a top-level disconnection of all clients' channels
     '''
+    class State(Enum):
+        '''
+
+        '''
+        SUCCEEDED = 1,
+        FAILED = 2,
+        INVALID = 3
+
     def __init__(self, maxclient=MAX_CLIENTS):
         '''
         Constructor for ServerProgram object, creates a ServerProgramObject without opening the server
@@ -214,8 +290,8 @@ class ServerProgram:
         self.clientListLock = threading.Lock()
         self.serverDisconnectionEvent = threading.Event()
 
-        ClientHandler.UniversalRequestQueue = self.universalRequestQueue
-        ClientHandler.ServerDisconnectionEvent = self.serverDisconnectionEvent
+        MessagingHandler.UniversalRequestQueue = self.universalRequestQueue
+        MessagingHandler.ServerDisconnectionEvent = self.serverDisconnectionEvent
 
         log.info(f"Server program created. Max clients = {self.maxClients}")
 
@@ -224,7 +300,7 @@ class ServerProgram:
     
     def Run(self):
         '''
-        Console-based method to run the server object
+        Console-based method to run the server object, mostly for debugging purposes
         '''
         # host = input("Host: ")
         # port = int(input("Port: "))
@@ -250,7 +326,7 @@ class ServerProgram:
     @threaded_daemon
     def OpenServer(self, host=D_HOST, port=D_PORT, backlog=D_BACKLOG):
         '''
-        Threaded - Open the server at (host, port) for backlog ammount of unaccepted connections
+        Threaded (daemon) - Open the server at (host, port) for backlog ammount of unaccepted connections
         
         Parameters:
             host (str): host part
@@ -268,9 +344,9 @@ class ServerProgram:
             with self.clientListLock:
                 for i in range(len(self.clients)):
                     if self.clients[i] == (None, None):
-                        handler = ClientHandler(i, clientSocket, address)
-                        thread = self.HandleClient(handler)
-                        log.info(f"{address} connected. Opened new thread {thread} to handle their requests")
+                        handler = MessagingHandler(i, clientSocket, address)
+                        thread = handler.ListenForRequests()
+                        log.info(f"{address} connected. Opened new thread {thread} to listen to their requests")
 
                         self.clients[i] = (thread, handler)
                         break
@@ -283,16 +359,18 @@ class ServerProgram:
     @threaded
     def ProcessRequestQueue(self):
         '''
+        Threaded - Enable the universalRequestQueue to be processes
 
+        After a request in the queue is process, the reply will be sent back to the client immediately
         '''
         while True:
             while not self.universalRequestQueue.empty():
                 id, request = self.universalRequestQueue.get()
                 log.info(f"Now processing Client {id}'s request: {request}")
-                reply = self.ProcessRequest(request)
+                reply = self.ProcessRequest(id, request)
                 log.info(f"Done processing Client {id}'s request: {request}")
-                self.clients[id][1].replyQueue.put(reply)
-                log.info(f"Posted Client {id}'s reply to their queue")
+                self.clients[id][1].SendMessage(reply)
+                log.info(f"Letting lient {id}'s handler replying to their client")
 
             # Now that there are no more requests:
             if self.serverDisconnectionEvent.is_set():
@@ -300,52 +378,33 @@ class ServerProgram:
 
         log.info(f"Processing thread has terminated")
 
-    @threaded
-    def HandleClient(self, handler:ClientHandler):
-        '''
-        Threaded - Maintains connections with client until one of the following occurs:
-            - The client wish to disconnect
-            - The server program signals to end all communications via an event
-
-        Parameters:
-            handler (ClientHandler): A communicative socket to client
-        '''
-        # Spawn Listen thread
-        listenThread = handler.ListenForRequests()
-
-        # Send replies here
-        while True:
-            if self.serverDisconnectionEvent.is_set():
-                # ???
-                break
-
-            if not handler.clientDisconnectionEvent.is_set() and not handler.replyQueue.empty():
-                reply = handler.replyQueue.get()
-                handler.SendMessage(reply)
-            elif handler.clientDisconnectionEvent.is_set():
-                with self.clientListLock:
-                    self.clients[handler.id] = (None, None)
-                break
-            
-        listenThread.join()
-        log.info(f"Client {handler.id} handler thread has terminated")
-
-
-    def ProcessRequest(self, request:str):
+    def ProcessRequest(self, id:int, request:bytes):
         '''
         Determines appropriate actions for a request from client.
         Full list of all possible requests see .........
 
+        A disconnection request will results in a hang for the client handler's listening thread to fully terminate before continuing
+
         Parameters:
+            id (ind):
+                id of the client, dictated by the program
             request (str):
                 a request in string form
         
-        Returns:
-            successful (bool):
-                Indicates whether or no
+        Returns: (for now it's just "OK")
+            state (ServerPorgram.State):
+                Indicates the status of the request after processing
+            reply (bytes):
+                Any extra data produced after processing, needed to send back to client
+            
         Raises:
-            DOC THIS!
+            eh?
         '''
+        if request == b'DISCONNECT':
+            with self.clientListLock:
+                self.clients[id][1].join()
+                self.clients[id] = (None, None)
+
         return "OK".encode(FORMAT)
         
 
