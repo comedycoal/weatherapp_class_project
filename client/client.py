@@ -8,6 +8,7 @@ import queue
 import time
 import os
 from pathlib import Path
+from enum import Enum
 
 D_HOST = '127.0.0.1'
 D_PORT = 7878
@@ -51,9 +52,38 @@ def threaded_daemon(func):
         return thread
     return wrapper
 
-
 class ClientProgram:
+    '''
+    Class for the client program that represents and encapsulates traffic and commands to and from a server for weather data
+
+    Attributes:
+        sock (socket.socket):
+            The communication socket with the server
+        connected (bool):
+            indicates the status of the communication channel
+        requestID (int):
+            current requestID for this connection session
+        dataQueue (queue.Queue):
+            Queue for replies from the server
+        
+    '''
+    class State(Enum):
+        '''
+        Provides an enumeration for standard communicative status between client and servers.
+        All request wrapper should return a State status
+
+        - SUCCEEDED: the request is sent perfectly and there might be extra data attached from the server
+        - FAILED: the request is sent perfectly but the server did not process successfully
+        - BADCONNECTION: the request is not sent
+        '''
+        SUCCEEDED = 1,
+        FAILED = 2,
+        BADCONNECTION = 3
+
     def __init__(self):
+        '''
+        Constructs a client program object
+        '''
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.connected = False
         self.requestID = 0
@@ -115,13 +145,64 @@ class ClientProgram:
             
         listenThread.join()
 
-    def Login(self):
+    def Login(self, username:str, password:str):
+        '''
+        Wrapper function to request to the server command 'LOGIN'
+
+        Parameters:
+            username (str): self-explanatory
+            password (str): self-explanatory
+
+        Returns:
+            state (ClientProgram.State):
+                dictates the status of the request
+            extraData (bytes):
+                an attached error message from server, indicates the problem with the requested login
+        '''
         pass
 
-    def Register(self):
+    def Register(self, username:str, password:str):
+        '''
+        Wrapper function to request to the server command 'REGISTER'
+
+        Parameters:
+            username (str): self-explanatory
+            password (str): self-explanatory
+
+        Returns:
+            state (ClientProgram.State):
+                dictates the status of the request
+            extraData (bytes):
+                an attached error message from server, indicates the problem with the requested registration
+        '''
         pass
 
-    def RequestWeatherData(self, command):
+    def RequestWeatherDataAll(self):
+        '''
+        Wrapper function to request to the server command 'LISTALL'
+
+        Parameters:
+
+        Returns:
+            state (ClientProgram.State):
+                dictates the status of the request
+            extraData (bytes):
+                an attached error message from server, indicates the problem with the requested weather data
+        '''
+        pass
+
+    def RequestWeatherDate7DaysOf(self, city_id):
+        '''
+        Wrapper function to request to the server command 'LIST'
+
+        Parameters:
+
+        Returns:
+            state (ClientProgram.State):
+                dictates the status of the request
+            extraData (bytes):
+                an attached error message from server, indicates the problem with the requested weather data
+        '''
         pass
 
     def SendMessage(self, message:bytes):
@@ -129,9 +210,13 @@ class ClientProgram:
         Send a message to the server
         
         Parameters:
+            message (bytes):
+                Message to send, in bytes
 
         Returns:
-
+            state (bool):
+                if True, the message is sent successfully
+                if False, an error has occured and the message is either not sent or sent errorneously
         '''
         bytes_sent = 0
         try:
@@ -159,6 +244,19 @@ class ClientProgram:
     @threaded
     def ListenForReplies(self):
         '''
+        Threaded - Enable message listening mechanism
+
+        The method actively listens for requests
+        The method terminates if:
+            - The connection is lost
+            - The server wants to disconnect, this will only happens once the client confirms with a specific message
+            - the client wants to disconnect (via a message), this will happens once a specific message is received, regardless of unsent replies
+
+        Parameters:
+            requestQueue (queue.Queue):
+                The queue for requests to be put in for processing
+                Default is None.
+                If None, this object will use the class level UniversalRequestQueue to put in requests
         '''
         while True:
             message = None
