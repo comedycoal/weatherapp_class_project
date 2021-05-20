@@ -2,14 +2,12 @@
 Console-based module for weather app server side functionality
 '''
 import threading
+import datetime
 import logging
 import socket
-import time
-import enum
-import os
 import queue
+import os
 from pathlib import Path
-from client import ClientProgram
 from enum import Enum
 
 from weather_data_handler import *
@@ -119,11 +117,16 @@ class MessagingHandler:
         self.id = id
         self.socket = clientSocket
         self.address = addr
+        self.logged_in = False
         log.info(f'New messaging handler with id {id} for {self.address}')
 
     def __del__(self):
         self.socket.close()
         log.info(f"Closed connection with {self.address}")
+
+    def SetLoggedIn(self, username):
+        self.logged_in = True
+        self.username = username
 
     def SendMessage(self, message:bytes):
         '''
@@ -138,6 +141,7 @@ class MessagingHandler:
                 False if any errors occured, and logs traceback in module level's log file
         '''
         bytes_sent = 0
+        length = 0
         try:
             length = len(message)
             header = str(length).encode(FORMAT)
@@ -261,13 +265,6 @@ class ServerProgram:
         serverDisconnectionEvent (threading.Event):
             an event signals a top-level disconnection of all clients' channels
     '''
-    class State(Enum):
-        '''
-
-        '''
-        SUCCEEDED = 1,
-        FAILED = 2,
-        INVALID = 3
 
     def __init__(self, maxclient=MAX_CLIENTS):
         '''
@@ -366,11 +363,13 @@ class ServerProgram:
         while True:
             while not self.universalRequestQueue.empty():
                 id, request = self.universalRequestQueue.get()
-                log.info(f"Now processing Client {id}'s request: {request}")
                 reply = self.ProcessRequest(id, request)
-                log.info(f"Done processing Client {id}'s request: {request}")
-                self.clients[id][1].SendMessage(reply)
-                log.info(f"Letting lient {id}'s handler replying to their client")
+                if self.clients[id][0].is_alive():
+                    log.info(f"Letting client {id}'s handler replying to their client")
+                    self.clients[id][1].SendMessage(reply)
+                else:
+                    self.clients[id] = (None, None)
+                    log.info(f"Removed client {id}'s handler from client list")
 
             # Now that there are no more requests:
             if self.serverDisconnectionEvent.is_set():
@@ -391,22 +390,112 @@ class ServerProgram:
             request (str):
                 a request in string form
         
-        Returns: (for now it's just "OK")
-            state (ServerPorgram.State):
-                Indicates the status of the request after processing
+        Returns:
             reply (bytes):
-                Any extra data produced after processing, needed to send back to client
+                A status code and extra data (if any) produced after processing, needed to send back to client
             
         Raises:
             eh?
         '''
+        log.info(f"Now processing Client {id}'s request: {request}")
+        status = b'INVALID'
+        reply = None
         if request == b'DISCONNECT':
             with self.clientListLock:
-                self.clients[id][1].join()
-                self.clients[id] = (None, None)
+                self.clients[id][0].join()
+        else:
+            cmd, param = ServerProgram.SplitOnce(request)
+            if cmd and param:
+                if cmd == b'LOGIN':
+                    param = param.decode(FORMAT)
+                    username, password = ServerProgram.SplitOnce(param)
+                    
+                    loginstatus = self.userDataHandler.Verify(username, password)
+                    if loginstatus == UserDataHandler.LoginState.VALID:
+                        status = b'SUCCEEDED'
+                        self.clients[id].SetLoggedIn(username)
+                    else:
+                        status = b'FAILED'
+                        if loginstatus == UserDataHandler.LoginState.NO_USERNAME:
+                            reply = b'USERNAME NOT FOUND'
+                        elif loginstatus == UserDataHandler.LoginState.WRONG_PASSWORD:
+                            reply = b'WRONG PASSWORD'
+                elif cmd == b'REGISTER':
+                    param = param.decode(FORMAT)
+                    username, password = ServerProgram.SplitOnce(param)
+                    registerstatus = self.userDataHandler.Register(username, password)
+                    if registerstatus == UserDataHandler.RegisterState.VALID:
+                        status = b'SUCCEEDED'
+                    else:
+                        status = status = b'FAILED'
+                        if registerstatus == UserDataHandler.RegisterState.DUPLICATE:
+                            reply = b'USERNAME ALREADY EXISTS'
+                else:
+                    if self.clients[id].logged_in:
+                        if cmd == 'WEATHER':
+                            mode, param = ServerProgram.SplitOnce(param, errorOnNoTrail=False)
+                            if mode == b'ALL':
+                                date = None
+                                validDate = True
+                                if param:
+                                    try:
+                                        date = datetime.datetime.strptime(param.decode(FORMAT), '%Y/%m/%d').date()
+                                    except:
+                                        validDate = False
+                                        status = b'INVALID'
+                                else:
+                                    date = datetime.date.today()
 
-        return "OK".encode(FORMAT)
-        
+                                if validDate:
+                                    alist = self.weatherDataHandler.FetchAllCitiesByDate(date)
+                                    reply = json.dumps(alist).encode(FORMAT)
+                                    status = b'SUCCEEDED'
+                                
+                            elif mode == b'RECENT':
+                                city_id, count = ServerProgram.SplitOnce(param, errorOnNoTrail=False)
+                                good_id = True
+                                try:
+                                    city_id = int(city_id.decode(FORMAT))
+                                except:
+                                    status=  b'FAILED'
+                                    good_id = False
+
+                                if good_id:
+                                    if not count:
+                                        count = 7
+                                    else:
+                                        count = count.decode(FORMAT)
+
+                                    fetchstate, res = self.weatherDataHandler.FetchForcastsByCity(city_id, datetime.date.today(), count)
+                                    if fetchstate:
+                                        status = b'FAILED'
+                                    else:
+                                        status = b'SUCCEEDED'
+                                        reply = json.dumps(res).encode(FORMAT)
+                    else:
+                        status = b'FAILED'
+                        reply = b'NOT LOGGED IN'
+
+        log.info(f"Done processing Client {id}'s request: {request}")
+        return status + b' ' + reply if reply else status
+
+    @staticmethod
+    def SplitOnce(request, errorOnNoTrail=True):
+        '''
+        '''
+        splitted = None
+        try:
+            if type(request) == bytes:
+                splitted = request.split(b' ', 1)
+            if type(request) == str:
+                splitted = request.split(' ', 1)
+            assert splitted and len(splitted) == 2, "Request is missing additional parameters"
+            return splitted[0], splitted[1]
+        except AssertionError:
+            if not errorOnNoTrail:
+                return splitted[0], None
+    
+            return None, None
 
 if __name__ == '__main__':
     a = ServerProgram()

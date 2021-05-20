@@ -5,6 +5,11 @@ class UserDataHandler:
         NO_USERNAME = 0,
         WRONG_PASSWORD = 1,
         VALID = 2
+
+    class RegisterState(enum.Enum):
+        DUPLICATE = 0,
+        VALID = 1,
+        WEAK_PASSWORD = 2
     
     def __init__(self, jsonPath):
         pass

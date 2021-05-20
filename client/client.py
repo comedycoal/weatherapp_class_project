@@ -123,17 +123,13 @@ class ClientProgram:
             if self.disconnectEvent.is_set():
                 break
 
-            if not self.loggedIn:
-                print("Login:")
-                username = input("Username: ")
-                password = input("Password: ")
-                logReq = " ".join(["LOGIN", username, password])
-                self.SendMessage(logReq.encode(FORMAT))
-            else:
-                req = input("Request: ")
-                self.SendMessage(req.encode(FORMAT))
+            req = input("Request: ")
+            self.SendMessage(req.encode(FORMAT))
+            if req == 'DISCONNECT':
+                self.disconnectEvent.set()
 
             data = None
+            
             while True:
                 if self.disconnectEvent.is_set():
                     break
@@ -143,6 +139,7 @@ class ClientProgram:
 
             print(data)
             
+        self.Disconnect()
         listenThread.join()
 
     def Login(self, username:str, password:str):
@@ -262,21 +259,29 @@ class ClientProgram:
             message = None
             try:
                 # Listens for HEADER message
-                message_length = self.sock.recv(HEADER_LENGTH).decode(FORMAT)
-                if message_length:
-                    length = int(message_length)
-                    # If HEADER is caught, listens for the actual message
-                    bytesReceived = 0
-                    chunks = []
-                    while bytesReceived < length:
-                        message = self.sock.recv(length - bytesReceived)
-                        bytesReceived += len(message)
-                        chunks.append(message)
-                    message = b''.join(chunks)
+                hasMessage = self.sock.recv(HEADER_LENGTH, socket.MSG_PEEK).decode(FORMAT)
+                if hasMessage:
+                    message_length = self.sock.recv(HEADER_LENGTH).decode(FORMAT)
+                    if message_length:
+                        length = int(message_length)
+                        # If HEADER is caught, listens for the actual message
+                        bytesReceived = 0
+                        chunks = []
+                        while bytesReceived < length:
+                            message = self.sock.recv(length - bytesReceived)
+                            bytesReceived += len(message)
+                            chunks.append(message)
+                        message = b''.join(chunks)
+                        log.info(f"Client has received message of length {message_length}")
+            except ConnectionResetError as e:
+                self.disconnectEvent.set()
+                log.exception(f"Abrupt disconnection occured while listening for messages. The connection will effectively close")
+                break
             except Exception as e:
-                # Please handle errors
-                # Remember to catch "no connection" exception first (what is it called again?)
-                return
+                # Please handle errors, maybe?
+                self.disconnectEvent.set()
+                log.exception(f"Exception occured on listening thread.")
+                break
 
             # Now that we have a message
             # If the message is "DISCONNECT"
