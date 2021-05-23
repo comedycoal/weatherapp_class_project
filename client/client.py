@@ -117,7 +117,7 @@ class ClientProgram:
         log.info("Socket closed. Connection to server has terminated")
 
     def Run(self):
-        listenThread = self.ListenForReplies()
+        listenThread = self.ListenForMessages()
 
         while True:
             if self.disconnectEvent.is_set():
@@ -141,6 +141,7 @@ class ClientProgram:
             
         self.Disconnect()
         listenThread.join()
+        print("Client program ended")
 
     def Login(self, username:str, password:str):
         '''
@@ -239,7 +240,7 @@ class ClientProgram:
         return False
     
     @threaded
-    def ListenForReplies(self):
+    def ListenForMessages(self):
         '''
         Threaded - Enable message listening mechanism
 
@@ -290,6 +291,7 @@ class ClientProgram:
             if message == b'DISCONNECT':
                 log.info(f"Server has requested disconnection.")
                 self.disconnectEvent.set()
+                self.SendMessage(b'CONFIRM DISCONNECTION')
                 break
 
             # Any other messages:

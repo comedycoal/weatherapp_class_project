@@ -121,8 +121,7 @@ class MessagingHandler:
         log.info(f'New messaging handler with id {id} for {self.address}')
 
     def __del__(self):
-        self.socket.close()
-        log.info(f"Closed connection with {self.address}")
+        pass
 
     def SetLoggedIn(self, username):
         self.logged_in = True
@@ -281,10 +280,11 @@ class ServerProgram:
         self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.weatherDataHandler = WeatherDataHandler(WEATHER_DATA_PATH)
         self.userDataHandler = UserDataHandler(USER_DATA_PATH)
-        self.adminWeatherHandler = WeatherDataModifier(USER_DATA_PATH)
+        self.adminWeatherHandler = None
         self.universalRequestQueue = queue.Queue()
 
         self.clientListLock = threading.Lock()
+        self.weatherDatabaseLock = threading.Lock()
         self.serverDisconnectionEvent = threading.Event()
 
         MessagingHandler.UniversalRequestQueue = self.universalRequestQueue
@@ -311,15 +311,81 @@ class ServerProgram:
 
         a = input("Terminate by any input: ")
         self.serverDisconnectionEvent.set()
+        self.serverSocket.close()
         log.info(f"Server has issued disconnection to all clients")
 
         for connection in self.clients:
             if connection != (None, None):
+                connection[1].SendMessage(b'DISCONNECT')
                 connection[0].join()
 
+        connectionThread.join()
         processthread.join()
         log.info(f"All client handlers has terminated")
 
+    def Start(self, host=D_HOST, port=D_PORT, backlog=D_BACKLOG):
+        '''
+        Callback to start the program
+        '''
+        self.connectionThread = self.OpenServer(host, port, backlog)
+        log.info(f"Opened new thread {self.connectionThread} to handle server's connection requests")
+
+        self.processthread = self.ProcessRequestQueue()
+        log.info(f"Opened new thread {self.processthread} to handle clients' requests")
+
+        self.weatherDataHandler.LoadDatabase()
+
+    def End(self):
+        '''
+        Callback to close server and end program
+        '''
+        self.serverDisconnectionEvent.set()
+        self.serverSocket.close()
+        log.info(f"Server has issued disconnection to all clients")
+
+        for connection in self.clients:
+            if connection != (None, None):
+                connection[1].SendMessage(b'DISCONNECT')
+                connection[0].join()
+
+        if self.connectionThread:
+            self.connectionThread.join()
+        if self.processthread:
+            self.processthread.join()
+        self.connectionThread = self.processthread = None
+        log.info(f"All client handlers has terminated")
+
+    def EnterEditMode(self):
+        '''
+        Start edit mode.
+
+        It is advisable to disconnect (using End method) from all clients before entering edit mode
+
+        Edit mode allows an admin to edit the weather database using the returned WeatherDataModifier
+        Clients can still connects to and fetch data using the old database
+
+        Returns:
+            adminWeatherHandler (WeatherDataModifier)
+        '''
+        self.adminWeatherHandler = WeatherDataModifier(WEATHER_DATA_PATH)
+        return self.adminWeatherHandler
+
+    def ExitEditModeAndReload(self, save=True):
+        '''
+        End edit mode and reloads the database
+
+        Parameters:
+            save (bool):
+                Dictates whether edits are saved or not
+        '''
+        self.adminWeatherHandler = None
+
+        if save:
+            self.adminWeatherHandler.SaveDatabase()
+        
+        with self.weatherDatabaseLock:
+            self.weatherDataHandler.LoadDatabase()
+        
     @threaded_daemon
     def OpenServer(self, host=D_HOST, port=D_PORT, backlog=D_BACKLOG):
         '''
@@ -336,7 +402,10 @@ class ServerProgram:
 
         log.info(f"Server socket opened at ({host}, {port})")
         while self.clients.count((None, None)) > 0:
-            clientSocket, address = self.serverSocket.accept()
+            try:
+                clientSocket, address = self.serverSocket.accept()
+            except:
+                break
 
             with self.clientListLock:
                 for i in range(len(self.clients)):
@@ -352,7 +421,7 @@ class ServerProgram:
 
         # Wait how do we stop connections if accept() just... blocks?
         log.info(f"Server connection thread has terminated")
-        
+
     @threaded
     def ProcessRequestQueue(self):
         '''
@@ -447,7 +516,9 @@ class ServerProgram:
                                     date = datetime.date.today()
 
                                 if validDate:
-                                    alist = self.weatherDataHandler.FetchAllCitiesByDate(date)
+                                    alist = None
+                                    with self.weatherDatabaseLock:
+                                        alist = self.weatherDataHandler.FetchAllCitiesByDate(date)
                                     reply = json.dumps(alist).encode(FORMAT)
                                     status = b'SUCCEEDED'
                                 
@@ -457,7 +528,7 @@ class ServerProgram:
                                 try:
                                     city_id = int(city_id.decode(FORMAT))
                                 except:
-                                    status=  b'FAILED'
+                                    status = b'FAILED'
                                     good_id = False
 
                                 if good_id:
@@ -465,11 +536,11 @@ class ServerProgram:
                                         count = 7
                                     else:
                                         count = count.decode(FORMAT)
-
-                                    fetchstate, res = self.weatherDataHandler.FetchForcastsByCity(city_id, datetime.date.today(), count)
+                                    fetchstate = b'FAILED'
+                                    res = None
+                                    with self.weatherDatabaseLock:
+                                        fetchstate, res = self.weatherDataHandler.FetchForcastsByCity(city_id, datetime.date.today(), count)
                                     if fetchstate:
-                                        status = b'FAILED'
-                                    else:
                                         status = b'SUCCEEDED'
                                         reply = json.dumps(res).encode(FORMAT)
                     else:
@@ -499,5 +570,7 @@ class ServerProgram:
 
 if __name__ == '__main__':
     a = ServerProgram()
-    a.Run()
+    a.Start()
+    m = input()
+    a.End()
     pass

@@ -70,7 +70,7 @@ class City:
         '''
         Construct a city object
 
-        The constructor needs either a manual id, or a automatic idGetter function, if both are present, the manual id will be favored
+        The constructor needs a manual id
 
         Parameters:
             name (str):
@@ -181,6 +181,7 @@ class WeatherDataHandler:
                 True if database is loaded and ready to use
                 False otherwise
         '''
+        loaded = False
         try:
             self.city_list = []
             self.id_lookup = dict()
@@ -193,10 +194,11 @@ class WeatherDataHandler:
                 self.city_list.append(new_city)
                 self.id_lookup[new_city.id] = i
                 i += 1
-            return True
+                loaded = True
         except Exception as e:
             print(e)
-            return False
+            
+        return loaded
 
     def FetchAllCitiesByDate(self, adate:date=None):
         '''
@@ -283,7 +285,6 @@ class WeatherDataModifier(WeatherDataHandler):
                 return super().default(o)
 
     def __del__(self):
-        #self.SaveDatabase()
         pass
 
     def LoadDatabase(self):
@@ -459,6 +460,5 @@ if __name__ == '__main__':
     JSON_PATH = os.path.join(Path(__file__).parent.absolute(),"data\\weather_data.json")
 
     a = WeatherDataHandler(JSON_PATH)
-    a.LoadDatabase()
     print(a.FetchForcastsByCity(32248, date(2021, 5, 23)))
     print(a.FetchAllCitiesByDate(date(2021, 5, 19)))
