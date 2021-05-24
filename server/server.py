@@ -6,12 +6,13 @@ import datetime
 import logging
 import socket
 import queue
+import json
 import os
 from pathlib import Path
 from enum import Enum
 
-from weather_data_handler import *
-from user_data_handler import *
+from weather_data_handler import WeatherDataHandler, WeatherDataModifier
+from user_data_handler import UserDataHandler
 
 D_HOST = '0.0.0.0'
 D_PORT = 7878
@@ -482,7 +483,7 @@ class ServerProgram:
                     loginstatus = self.userDataHandler.Verify(username, password)
                     if loginstatus == UserDataHandler.LoginState.VALID:
                         status = b'SUCCEEDED'
-                        self.clients[id].SetLoggedIn(username)
+                        self.clients[id][1].SetLoggedIn(username)
                     else:
                         status = b'FAILED'
                         if loginstatus == UserDataHandler.LoginState.NO_USERNAME:
@@ -500,16 +501,17 @@ class ServerProgram:
                         if registerstatus == UserDataHandler.RegisterState.DUPLICATE:
                             reply = b'USERNAME ALREADY EXISTS'
                 else:
-                    if self.clients[id].logged_in:
-                        if cmd == 'WEATHER':
+                    if self.clients[id][1].logged_in:
+                        if cmd == b'WEATHER':
                             mode, param = ServerProgram.SplitOnce(param, errorOnNoTrail=False)
                             if mode == b'ALL':
                                 date = None
                                 validDate = True
                                 if param:
                                     try:
-                                        date = datetime.datetime.strptime(param.decode(FORMAT), '%Y/%m/%d').date()
-                                    except:
+                                        print(param)
+                                        date = datetime.datetime.strptime(param.decode(FORMAT), '%Y/%m/%d').date()  
+                                    except Exception as e:
                                         validDate = False
                                         status = b'INVALID'
                                 else:
@@ -535,7 +537,7 @@ class ServerProgram:
                                     if not count:
                                         count = 7
                                     else:
-                                        count = count.decode(FORMAT)
+                                        count = int(count.decode(FORMAT))
                                     fetchstate = b'FAILED'
                                     res = None
                                     with self.weatherDatabaseLock:

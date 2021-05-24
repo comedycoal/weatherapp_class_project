@@ -18,6 +18,7 @@ class UserDataHandler:
         pass
 
     def Verify(self, username, password):
+        return UserDataHandler.LoginState.VALID
         pass
 
     def Register(self, username, password):
