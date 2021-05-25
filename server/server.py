@@ -434,10 +434,10 @@ class ServerProgram:
             while not self.universalRequestQueue.empty():
                 id, request = self.universalRequestQueue.get()
                 reply = self.ProcessRequest(id, request)
-                if self.clients[id][0].is_alive():
+                if reply and self.clients[id][0].is_alive():
                     log.info(f"Letting client {id}'s handler replying to their client")
                     self.clients[id][1].SendMessage(reply)
-                else:
+                elif not reply:
                     self.clients[id] = (None, None)
                     log.info(f"Removed client {id}'s handler from client list")
 
@@ -473,6 +473,8 @@ class ServerProgram:
         if request == b'DISCONNECT':
             with self.clientListLock:
                 self.clients[id][0].join()
+
+            return None
         else:
             cmd, param = ServerProgram.SplitOnce(request)
             if cmd and param:
@@ -509,11 +511,11 @@ class ServerProgram:
                                 validDate = True
                                 if param:
                                     try:
-                                        print(param)
                                         date = datetime.datetime.strptime(param.decode(FORMAT), '%Y/%m/%d').date()  
                                     except Exception as e:
                                         validDate = False
-                                        status = b'INVALID'
+                                        status = b'FAILED'
+                                        reply = b'WRONG DATE FORMAT'
                                 else:
                                     date = datetime.date.today()
 
@@ -531,6 +533,7 @@ class ServerProgram:
                                     city_id = int(city_id.decode(FORMAT))
                                 except:
                                     status = b'FAILED'
+                                    reply = b'NO CITYID'
                                     good_id = False
 
                                 if good_id:
