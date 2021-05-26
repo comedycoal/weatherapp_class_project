@@ -20,8 +20,8 @@ D_BACKLOG = 10
 MAX_CLIENTS = 5
 FORMAT = 'utf-8'
 
-HEADER_LENGTH = 64
-ID_LENGTH = 16
+HEADER_LENGTH = 8
+ID_LENGTH = 4
 
 WEATHER_DATA_PATH = os.path.join(Path(__file__).parent.absolute(),"data\\weather_data.json")
 USER_DATA_PATH = os.path.join(Path(__file__).parent.absolute(),"data\\users.json")
@@ -38,13 +38,13 @@ f_handler = logging.FileHandler(filename=LOG_PATH, mode='w+')
 f_handler.setLevel(logging.DEBUG)
 f_handler.setFormatter(f_formatter)
 
-c_handler = logging.StreamHandler()
-c_handler.setLevel(logging.WARNING)
-c_handler.setFormatter(c_formatter)
+# c_handler = logging.StreamHandler()
+# c_handler.setLevel(logging.WARNING)
+# c_handler.setFormatter(c_formatter)
 
 log.setLevel(logging.DEBUG)
 log.addHandler(f_handler)
-log.addHandler(c_handler)
+# log.addHandler(c_handler)
 
 
 #-------------------- Threaded decorator --------------------#
@@ -128,13 +128,15 @@ class MessagingHandler:
         self.logged_in = True
         self.username = username
 
-    def SendMessage(self, message:bytes):
+    def SendMessage(self, message:bytes, id:int):
         '''
         Send a message to client
         
         Parameters:
             message (bytes):
                 A message in bytes
+            id (int):
+                client-specific identifier of the request, a reply has the same id as the request it answers to
         Returns:
             status (bool):
                 True if the message is sent without any server side or connection issues
@@ -143,15 +145,12 @@ class MessagingHandler:
         bytes_sent = 0
         length = 0
         try:
-            length = len(message)
-            header = str(length).encode(FORMAT)
-            header += b' ' * (HEADER_LENGTH - len(header))
-            
-            bytes_sent = self.socket.send(header)
-            assert bytes_sent == HEADER_LENGTH, "Length of message sent does not match that of the actual message"
-                
-            # Add id to the message?
-
+            length = len(message) + HEADER_LENGTH + ID_LENGTH
+            assert length <= 0xFFFFFFFFFFFFFFFF
+            header = length.to_bytes(HEADER_LENGTH, byteorder='big')
+            reqID = id.to_bytes(ID_LENGTH, byteorder='big')
+            message = b''.join([header, reqID, message])
+        
             bytes_sent = self.socket.send(message)
             assert bytes_sent == length, "Length of message sent does not match that of the actual message"
 
@@ -185,25 +184,27 @@ class MessagingHandler:
         log.info(f"Client {self.id} has started listening for requests")
         while True:
             message = None
+            reqID = None
             try:
                 # Listens for HEADER message
-                hasMessage = self.socket.recv(HEADER_LENGTH, socket.MSG_PEEK).decode(FORMAT)
-                if hasMessage:
-                    message_length = self.socket.recv(HEADER_LENGTH).decode(FORMAT)
+                header_of_message = self.socket.recv(HEADER_LENGTH, socket.MSG_PEEK)
+                if header_of_message:
+                    message_length = int.from_bytes(header_of_message, byteorder='big')
                     if message_length:
-                        length = int(message_length)
-                        # If HEADER is caught, listens for the actual message
                         bytesReceived = 0
                         chunks = []
-                        while bytesReceived < length:
-                            message = self.socket.recv(length - bytesReceived)
+                        while bytesReceived < message_length:
+                            message = self.socket.recv(message_length - bytesReceived)
                             bytesReceived += len(message)
                             chunks.append(message)
                         message = b''.join(chunks)
-                        log.info(f"Client handler {self.id} has received message of length {length}")
+                        # message is now b'<HEADER><ID><MESSAGE>'
+                        reqID = int.from_bytes(message[HEADER_LENGTH:HEADER_LENGTH + ID_LENGTH], byteorder='big')
+                        message = message[HEADER_LENGTH + ID_LENGTH:]
+                        log.info(f"Client handler {self.id} has received message of length {message_length}")
             except ConnectionResetError as e:
                 # This thread should now close
-                reqQueue.put((self.id, b'DISCONNECT'))
+                reqQueue.put((self.id, id, b'DISCONNECT'))
                 log.exception(f"Abrupt disconnection occured while listening for client {self.id}'s requests. The connection will effectively close")
                 break
             except Exception as e:
@@ -225,12 +226,12 @@ class MessagingHandler:
                 # Maybe?
                 elif message == b'DISCONNECT':
                     log.info(f"Client {self.id} at {self.address} has queued for disconnection.")
-                    reqQueue.put((self.id, message))
+                    reqQueue.put((self.id, reqID, message))
                     break
 
                 # 3. Any other messages: Pass it down to UniversalRequestQueue
-                reqQueue.put((self.id, message))
-                log.info(f"Client handler {self.id} has posted of length {length} to the process queue")
+                reqQueue.put((self.id, reqID, message))
+                log.info(f"Client handler {self.id} has posted of length {message_length} to the process queue")
                 
             # Go back to listening
 
@@ -317,7 +318,7 @@ class ServerProgram:
 
         for connection in self.clients:
             if connection != (None, None):
-                connection[1].SendMessage(b'DISCONNECT')
+                connection[1].SendMessage(b'DISCONNECT', 0xFFFF)
                 connection[0].join()
 
         connectionThread.join()
@@ -346,7 +347,7 @@ class ServerProgram:
 
         for connection in self.clients:
             if connection != (None, None):
-                connection[1].SendMessage(b'DISCONNECT')
+                connection[1].SendMessage(b'DISCONNECT', 0xFFFF)
                 connection[0].join()
 
         if self.connectionThread:
@@ -432,12 +433,12 @@ class ServerProgram:
         '''
         while True:
             while not self.universalRequestQueue.empty():
-                id, request = self.universalRequestQueue.get()
+                id, reqID, request = self.universalRequestQueue.get()
                 reply = self.ProcessRequest(id, request)
                 if reply and self.clients[id][0].is_alive():
                     log.info(f"Letting client {id}'s handler replying to their client")
-                    self.clients[id][1].SendMessage(reply)
-                elif not reply:
+                    self.clients[id][1].SendMessage(reply, reqID)
+                else:
                     self.clients[id] = (None, None)
                     log.info(f"Removed client {id}'s handler from client list")
 
