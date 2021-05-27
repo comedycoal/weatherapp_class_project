@@ -6,12 +6,13 @@ import datetime
 import logging
 import socket
 import queue
+import json
 import os
 from pathlib import Path
 from enum import Enum
 
-from weather_data_handler import *
-from user_data_handler import *
+from weather_data_handler import WeatherDataHandler, WeatherDataModifier
+from user_data_handler import UserDataHandler
 
 D_HOST = '0.0.0.0'
 D_PORT = 7878
@@ -19,11 +20,11 @@ D_BACKLOG = 10
 MAX_CLIENTS = 5
 FORMAT = 'utf-8'
 
-HEADER_LENGTH = 64
-ID_LENGTH = 16
+HEADER_LENGTH = 8
+ID_LENGTH = 4
 
 WEATHER_DATA_PATH = os.path.join(Path(__file__).parent.absolute(),"data\\weather_data.json")
-USER_DATA_PATH = os.path.join(Path(__file__).parent.absolute(),"data\\users.json")
+USER_DATA_PATH = os.path.join(Path(__file__).parent.absolute(),"data\\user_data.json")
 
 LOG_PATH = os.path.join(Path(__file__).parent.absolute(),"server.log")
 
@@ -37,13 +38,13 @@ f_handler = logging.FileHandler(filename=LOG_PATH, mode='w+')
 f_handler.setLevel(logging.DEBUG)
 f_handler.setFormatter(f_formatter)
 
-c_handler = logging.StreamHandler()
-c_handler.setLevel(logging.WARNING)
-c_handler.setFormatter(c_formatter)
+# c_handler = logging.StreamHandler()
+# c_handler.setLevel(logging.WARNING)
+# c_handler.setFormatter(c_formatter)
 
 log.setLevel(logging.DEBUG)
 log.addHandler(f_handler)
-log.addHandler(c_handler)
+# log.addHandler(c_handler)
 
 
 #-------------------- Threaded decorator --------------------#
@@ -66,7 +67,6 @@ class MessagingHandler:
     '''
     Class for handling messages to a client and back via a socket.
     Its message takes the form of: [HEADER - 8 bytes][ID - 2 bytes] <Actual Message>
-
     Messages are sent ad-hoc with SendMessage method while received messages are put to an external queue (see ListenForRequests method)
     
     Static Attributes:
@@ -76,7 +76,6 @@ class MessagingHandler:
         ServerDisconnectionEvent (threading.Event):
             A common Event for all objects of the class for additional control from the server program
             Set up an Event object prior to create any objects of this class.
-
     Attributes:
         id (int):
             an id for external identification purposes
@@ -101,7 +100,6 @@ class MessagingHandler:
     def __init__(self, id:int, clientSocket:socket.socket, addr):
         '''
         Constructor for MessagingHandler object
-
         Parameters:
             id (int): 
                 an id assigned by the server program for identification purposes
@@ -127,13 +125,15 @@ class MessagingHandler:
         self.logged_in = True
         self.username = username
 
-    def SendMessage(self, message:bytes):
+    def SendMessage(self, message:bytes, id:int):
         '''
         Send a message to client
         
         Parameters:
             message (bytes):
                 A message in bytes
+            id (int):
+                client-specific identifier of the request, a reply has the same id as the request it answers to
         Returns:
             status (bool):
                 True if the message is sent without any server side or connection issues
@@ -142,15 +142,12 @@ class MessagingHandler:
         bytes_sent = 0
         length = 0
         try:
-            length = len(message)
-            header = str(length).encode(FORMAT)
-            header += b' ' * (HEADER_LENGTH - len(header))
-            
-            bytes_sent = self.socket.send(header)
-            assert bytes_sent == HEADER_LENGTH, "Length of message sent does not match that of the actual message"
-                
-            # Add id to the message?
-
+            length = len(message) + HEADER_LENGTH + ID_LENGTH
+            assert length <= 0xFFFFFFFFFFFFFFFF
+            header = length.to_bytes(HEADER_LENGTH, byteorder='big')
+            reqID = id.to_bytes(ID_LENGTH, byteorder='big')
+            message = b''.join([header, reqID, message])
+        
             bytes_sent = self.socket.send(message)
             assert bytes_sent == length, "Length of message sent does not match that of the actual message"
 
@@ -167,13 +164,11 @@ class MessagingHandler:
     def ListenForRequests(self, requestQueue:queue.Queue=None):
         '''
         Threaded - Enable message listening mechanism for a handler
-
         The method actively listens for requests
         The method terminates if:
             - The connection is lost
             - The server wants to disconnect, this will only happens once the client confirms with a specific message
             - the client wants to disconnect (via a message), this will happens once a specific message is received, regardless of unsent replies
-
         Parameters:
             requestQueue (queue.Queue):
                 The queue for requests to be put in for processing
@@ -184,25 +179,27 @@ class MessagingHandler:
         log.info(f"Client {self.id} has started listening for requests")
         while True:
             message = None
+            reqID = None
             try:
                 # Listens for HEADER message
-                hasMessage = self.socket.recv(HEADER_LENGTH, socket.MSG_PEEK).decode(FORMAT)
-                if hasMessage:
-                    message_length = self.socket.recv(HEADER_LENGTH).decode(FORMAT)
+                header_of_message = self.socket.recv(HEADER_LENGTH, socket.MSG_PEEK)
+                if header_of_message:
+                    message_length = int.from_bytes(header_of_message, byteorder='big')
                     if message_length:
-                        length = int(message_length)
-                        # If HEADER is caught, listens for the actual message
                         bytesReceived = 0
                         chunks = []
-                        while bytesReceived < length:
-                            message = self.socket.recv(length - bytesReceived)
+                        while bytesReceived < message_length:
+                            message = self.socket.recv(message_length - bytesReceived)
                             bytesReceived += len(message)
                             chunks.append(message)
                         message = b''.join(chunks)
-                        log.info(f"Client handler {self.id} has received message of length {length}")
+                        # message is now b'<HEADER><ID><MESSAGE>'
+                        reqID = int.from_bytes(message[HEADER_LENGTH:HEADER_LENGTH + ID_LENGTH], byteorder='big')
+                        message = message[HEADER_LENGTH + ID_LENGTH:]
+                        log.info(f"Client handler {self.id} has received message of length {message_length}")
             except ConnectionResetError as e:
                 # This thread should now close
-                reqQueue.put((self.id, b'DISCONNECT'))
+                reqQueue.put((self.id, id, b'DISCONNECT'))
                 log.exception(f"Abrupt disconnection occured while listening for client {self.id}'s requests. The connection will effectively close")
                 break
             except Exception as e:
@@ -224,12 +221,12 @@ class MessagingHandler:
                 # Maybe?
                 elif message == b'DISCONNECT':
                     log.info(f"Client {self.id} at {self.address} has queued for disconnection.")
-                    reqQueue.put((self.id, message))
+                    reqQueue.put((self.id, reqID, message))
                     break
 
                 # 3. Any other messages: Pass it down to UniversalRequestQueue
-                reqQueue.put((self.id, message))
-                log.info(f"Client handler {self.id} has posted of length {length} to the process queue")
+                reqQueue.put((self.id, reqID, message))
+                log.info(f"Client handler {self.id} has posted of length {message_length} to the process queue")
                 
             # Go back to listening
 
@@ -239,10 +236,8 @@ class MessagingHandler:
 class ServerProgram:
     '''
     Base class for server side weather app program
-
     Provides a compact interface to open server and handle clients' requests
     without additional controls
-
     Attributes:
         maxClients (int):
             indicates the number of client sockets a class' object can handle at once
@@ -268,7 +263,6 @@ class ServerProgram:
     def __init__(self, maxclient=MAX_CLIENTS):
         '''
         Constructor for ServerProgram object, creates a ServerProgramObject without opening the server
-
         Parameters:
             maxclient (int): maximum amount of clients allow to connect to the server
         
@@ -316,7 +310,7 @@ class ServerProgram:
 
         for connection in self.clients:
             if connection != (None, None):
-                connection[1].SendMessage(b'DISCONNECT')
+                connection[1].SendMessage(b'DISCONNECT', 0xFFFF)
                 connection[0].join()
 
         connectionThread.join()
@@ -345,7 +339,7 @@ class ServerProgram:
 
         for connection in self.clients:
             if connection != (None, None):
-                connection[1].SendMessage(b'DISCONNECT')
+                connection[1].SendMessage(b'DISCONNECT', 0xFFFF)
                 connection[0].join()
 
         if self.connectionThread:
@@ -358,12 +352,9 @@ class ServerProgram:
     def EnterEditMode(self):
         '''
         Start edit mode.
-
         It is advisable to disconnect (using End method) from all clients before entering edit mode
-
         Edit mode allows an admin to edit the weather database using the returned WeatherDataModifier
         Clients can still connects to and fetch data using the old database
-
         Returns:
             adminWeatherHandler (WeatherDataModifier)
         '''
@@ -373,7 +364,6 @@ class ServerProgram:
     def ExitEditModeAndReload(self, save=True):
         '''
         End edit mode and reloads the database
-
         Parameters:
             save (bool):
                 Dictates whether edits are saved or not
@@ -426,16 +416,15 @@ class ServerProgram:
     def ProcessRequestQueue(self):
         '''
         Threaded - Enable the universalRequestQueue to be processes
-
         After a request in the queue is process, the reply will be sent back to the client immediately
         '''
         while True:
             while not self.universalRequestQueue.empty():
-                id, request = self.universalRequestQueue.get()
+                id, reqID, request = self.universalRequestQueue.get()
                 reply = self.ProcessRequest(id, request)
-                if self.clients[id][0].is_alive():
+                if reply and self.clients[id][0].is_alive():
                     log.info(f"Letting client {id}'s handler replying to their client")
-                    self.clients[id][1].SendMessage(reply)
+                    self.clients[id][1].SendMessage(reply, reqID)
                 else:
                     self.clients[id] = (None, None)
                     log.info(f"Removed client {id}'s handler from client list")
@@ -450,9 +439,7 @@ class ServerProgram:
         '''
         Determines appropriate actions for a request from client.
         Full list of all possible requests see .........
-
         A disconnection request will results in a hang for the client handler's listening thread to fully terminate before continuing
-
         Parameters:
             id (ind):
                 id of the client, dictated by the program
@@ -472,6 +459,8 @@ class ServerProgram:
         if request == b'DISCONNECT':
             with self.clientListLock:
                 self.clients[id][0].join()
+
+            return None
         else:
             cmd, param = ServerProgram.SplitOnce(request)
             if cmd and param:
@@ -482,7 +471,7 @@ class ServerProgram:
                     loginstatus = self.userDataHandler.Verify(username, password)
                     if loginstatus == UserDataHandler.LoginState.VALID:
                         status = b'SUCCEEDED'
-                        self.clients[id].SetLoggedIn(username)
+                        self.clients[id][1].SetLoggedIn(username)
                     else:
                         status = b'FAILED'
                         if loginstatus == UserDataHandler.LoginState.NO_USERNAME:
@@ -500,18 +489,19 @@ class ServerProgram:
                         if registerstatus == UserDataHandler.RegisterState.DUPLICATE:
                             reply = b'USERNAME ALREADY EXISTS'
                 else:
-                    if self.clients[id].logged_in:
-                        if cmd == 'WEATHER':
+                    if self.clients[id][1].logged_in:
+                        if cmd == b'WEATHER':
                             mode, param = ServerProgram.SplitOnce(param, errorOnNoTrail=False)
                             if mode == b'ALL':
                                 date = None
                                 validDate = True
                                 if param:
                                     try:
-                                        date = datetime.datetime.strptime(param.decode(FORMAT), '%Y/%m/%d').date()
-                                    except:
+                                        date = datetime.datetime.strptime(param.decode(FORMAT), '%Y/%m/%d').date()  
+                                    except Exception as e:
                                         validDate = False
-                                        status = b'INVALID'
+                                        status = b'FAILED'
+                                        reply = b'WRONG DATE FORMAT'
                                 else:
                                     date = datetime.date.today()
 
@@ -528,15 +518,17 @@ class ServerProgram:
                                 try:
                                     city_id = int(city_id.decode(FORMAT))
                                 except:
-                                    status=  b'FAILED'
+                                    status = b'FAILED'
+                                    reply = b'NO CITYID'
                                     good_id = False
 
                                 if good_id:
                                     if not count:
                                         count = 7
                                     else:
-                                        count = count.decode(FORMAT)
-                                    fetchstate = b'FAILED', res = None
+                                        count = int(count.decode(FORMAT))
+                                    fetchstate = b'FAILED'
+                                    res = None
                                     with self.weatherDatabaseLock:
                                         fetchstate, res = self.weatherDataHandler.FetchForcastsByCity(city_id, datetime.date.today(), count)
                                     if fetchstate:

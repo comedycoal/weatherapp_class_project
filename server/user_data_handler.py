@@ -12,9 +12,6 @@ class UserDataHandler:
         WEAK_PASSWORD = 2
     
     def __init__(self, jsonPath):
-        self.datafilepath = jsonPath
-        self.id_lookup = dict()
-        self.city_list = []
         pass
 
     def __del__(self):

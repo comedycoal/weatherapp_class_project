@@ -11,13 +11,11 @@ class Forecast:
     def __init__(self, weatherInfo):
         '''
         Construct a Forecast object
-
         Parameters:
             weatherInfo (tuple):
                 a tuple of 4 values: <weather:str> <temperatur:float> <humidity:float> <wind_speed:float>
                 humidity must be between 0 and 1, if fails, raises an ValueError
                 wind_speed must be positive
-
         Raises:
             ValueError: when a weatherInfo value is not in appropriate range
         '''
@@ -39,10 +37,8 @@ class Forecast:
         Parameters:
             adict (dict):
                 A Dictionary with at least these 4 keys: 'weather', 'temperature', 'humidity', 'wind_speed'
-
         Returns:
             a Forecast object
-
         Raises:
             ValueError if a weatherInfo value is not in appropriate range
             Any errors an errorneous action on a dictionary may invoke
@@ -52,7 +48,6 @@ class Forecast:
     def ToDict(self):
         '''
         Retrieves a dictionary with 4 keys corresponding to each object member
-
         Returns:
             dict (dict):
                 A dictionary
@@ -69,9 +64,7 @@ class City:
     def __init__(self, name, id:int):
         '''
         Construct a city object
-
         The constructor needs a manual id
-
         Parameters:
             name (str):
                 The name of the city
@@ -104,7 +97,6 @@ class City:
     def AddForecast(self, date:date, dateWeatherForecast:Forecast, errorOnDuplicate=False, override=True):
         '''
         Add a forecast of weather for a date
-
         Parameters:
             date: (datetime.date):
                 a date object
@@ -116,7 +108,6 @@ class City:
                 if True: override if an old forecast for the same date exists.
                 Otherwise, keep the old forecast.
                 Only in effect if errorOnDuplicate is set to False
-
         Returns:
             state (bool):
                 True if successfully, else false
@@ -137,7 +128,6 @@ class City:
     def RemoveForecast(self, date:date):
         '''
         Remove the forecast of weather for a date
-
         Parameters:
             date: (datetime.date):
                 a date object
@@ -147,11 +137,9 @@ class City:
     def FetchForecast(self, date:date):
         '''
         Retrieve the forecast of weather for a date
-
         Parameters:
             date: (datetime.date):
                 a date object
-
         Returns:
             forecast (Forecast | None):
                 The corresponding Forecast object or None if there is not one
@@ -163,7 +151,6 @@ class WeatherDataHandler:
     def __init__(self, jsonPath:str):
         '''
         Create a weather data handler for the weather database
-
         Parameters:
             jsonPath (str):
                 file path to the database, in json format
@@ -175,7 +162,6 @@ class WeatherDataHandler:
     def LoadDatabase(self):
         '''
         Load the database into memory, saves it as an object's member
-
         Returns:
             status (bool):
                 True if database is loaded and ready to use
@@ -203,11 +189,9 @@ class WeatherDataHandler:
     def FetchAllCitiesByDate(self, adate:date=None):
         '''
         Retrive a list of essential weather data of every city in the database in primitives, if any is found
-
         Parameters:
             adate (datetime.date | None): default is None:
                 A date object to fetch forecasts of. If None, fetch today's forecasts (of the client's system time)
-
         Returns:
             weatherdata (list):
                 A list of tuples in form of (city_id, city_name, weather, temperature, humidity, wind_speed)
@@ -232,7 +216,6 @@ class WeatherDataHandler:
     def FetchForcastsByCity(self, city_id:int, mostRecentDate:date=None, count=7):
         '''
         Retrive a dictionary of weather forecasts of a city in the database in primitives, if any is found
-
         Parameters:
             city_id (int):
                 The city_id of the city to fetch forecasts
@@ -241,7 +224,6 @@ class WeatherDataHandler:
                 If None is passed, fetch up to today (of client's system time)
             count (int): Default is 7
                 How many dates prior to mostRecentDates to fetch forecasts of
-
         Returns:
             status (bool):
                 True: a city is found
@@ -291,7 +273,6 @@ class WeatherDataModifier(WeatherDataHandler):
         '''
         Load the database into memory and create a backup copy
         If no database exists, creates an empty one
-
         Returns:
             status (bool):
                 True if database is loaded and ready to use
@@ -309,7 +290,6 @@ class WeatherDataModifier(WeatherDataHandler):
     def SaveDatabase(self):
         '''
         Save the database from memory, and make a backup of the old
-
         Returns:
             status (bool):
                 True if database is loaded and ready to use
@@ -330,10 +310,8 @@ class WeatherDataModifier(WeatherDataHandler):
     def AddCity(self, city_name:str):
         '''
         Add a city to the database
-
         Parameters:
             city_name (str)
-
         Returns:
             status (bool): 
                 whether the city is added
@@ -351,12 +329,10 @@ class WeatherDataModifier(WeatherDataHandler):
     def AddForecastForCity(self, cityid, date:date, forecast:Forecast): 
         '''
         Add a forecast for a certain date to a city having cityid
-
         Parameters:
             cityid (int)
             date (datetime.date)
             forecast (Forecast)
-
         Returns:
             status (bool):
                 True if successfully added
@@ -376,12 +352,10 @@ class WeatherDataModifier(WeatherDataHandler):
     def AddForcastByValues(self, cityid, date:date, weatherInfoTuple):
         '''
         Add a forecast in form of a 4-tuple for a certain date to a city having cityid
-
         Parameters:
             cityid (int)
             date (datetime.date)
             weatherInfoTuple (tuple)
-
         Returns:
             status (bool):
                 True if successfully added
@@ -396,7 +370,6 @@ class WeatherDataModifier(WeatherDataHandler):
     def RemoveForecast(self, cityid, date:date):
         '''
         Removes existing forecast (if any) from a city with cityid
-
         Parameters:
             cityid (int)
             date (datetime.date)
@@ -410,10 +383,8 @@ class WeatherDataModifier(WeatherDataHandler):
     def RemoveCity(self, cityid):
         '''
         Removes a city from the database
-
         Parameters:
             cityid (int)
-
         Returns:
             status (bool):
                 True if city is removed
