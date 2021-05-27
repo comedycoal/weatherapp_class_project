@@ -122,7 +122,8 @@ class ClientProgram:
         if not self.sock:
             return
         self.sock.close()
-        self.listenThread.join()
+        if self.listenThread:
+            self.listenThread.join()
         self.connected = False
         self.sock = None
         log.info("Socket closed. Connection to server has terminated")
@@ -236,7 +237,7 @@ class ClientProgram:
         
         return ClientProgram.State.BADCONNECTION, None
 
-    def RequestWeatherDataAll(self, date:datetime.date=None):
+    def RequestWeatherDataAll(self, date:str=None):
         '''
         Wrapper function to request to the server command 'LISTALL'
 
@@ -250,8 +251,9 @@ class ClientProgram:
             data (list):
                 a list of lists in form of [city_id, city_name, weather, temperature, humidity, wind_speed]
         '''
-        date = date if date else datetime.date.today()
-        message = ' '.join(['WEATHER ALL', date.strftime('%Y/%m/%d')])
+        date = date if date else datetime.date.today().strftime('%Y/%m/%d')
+        
+        message = ' '.join(['WEATHER ALL', date])
         state, id = self.SendMessage(message.encode(FORMAT))
         if state:
             reply = self.GetReplyFor(id, timeout=3)
