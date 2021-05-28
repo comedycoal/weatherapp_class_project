@@ -1,3 +1,4 @@
+import os.path
 import json
 from datetime import date
 from datetime import datetime
@@ -187,6 +188,8 @@ class WeatherDataHandler:
             self.id_lookup = dict()
             fromjson = None
             i = 0
+            if not os.path.isfile(self.datafilepath):
+                return True
             with open(self.datafilepath, 'r') as fp:
                 fromjson = json.load(fp)
             for citydict in fromjson:
@@ -316,13 +319,13 @@ class WeatherDataModifier(WeatherDataHandler):
                 False otherwise
         '''
         try:
-            backupPath = self.datafilepath + datetime.today().strftime('%Y%m%d_%H%M%S') + '.BAK'
+            #backupPath = self.datafilepath + datetime.today().strftime('%Y%m%d_%H%M%S') + '.BAK'
             backupPath = self.datafilepath + '.BAK'
             with open(backupPath, "w") as bfp:
                 json.dump(self.backup_dict, bfp, indent='\t', cls=WeatherDataModifier.JSONEncoder)
             with open(self.datafilepath, "w") as fp:
                 json.dump(self.city_list, fp, indent='\t', cls=WeatherDataModifier.JSONEncoder)
-            return False
+            return True
         except Exception as e:
             print(e)
             return False
@@ -455,7 +458,6 @@ class WeatherDataModifier(WeatherDataHandler):
 
 
 if __name__ == '__main__':
-    import os
     from pathlib import Path
     JSON_PATH = os.path.join(Path(__file__).parent.absolute(),"data\\weather_data.json")
 
