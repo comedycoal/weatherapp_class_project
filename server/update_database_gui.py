@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import datetime
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PySide2 import QtCore, QtGui, QtWidgets
 from server import ServerProgram
 
 class UpdateDatabase(object):

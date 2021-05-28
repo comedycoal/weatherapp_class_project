@@ -2,7 +2,7 @@
 
 import datetime
 from logging import critical
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PySide2 import QtCore, QtGui, QtWidgets
 from client import ClientProgram
 from view_city_weather_gui import ViewCityWeather
 
