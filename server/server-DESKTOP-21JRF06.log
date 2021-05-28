@@ -1,5 +1,0 @@
-2021-05-28 07:40:39 [INFO at 293 in __init__ of server.py] Server program created.
-2021-05-28 07:40:42 [INFO at 293 in __init__ of server.py] Server program created.
-2021-05-28 07:40:42 [INFO at 333 in Start of server.py] Opened new thread <Thread(Thread-1, started daemon 1576)> to handle server's connection requests
-2021-05-28 07:40:42 [INFO at 405 in OpenServer of server.py] Server socket opened at (0.0.0.0, 7878)
-2021-05-28 07:40:42 [INFO at 336 in Start of server.py] Opened new thread <Thread(Thread-2, started 13040)> to handle clients' requests

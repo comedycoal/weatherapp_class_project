@@ -1,6 +1,6 @@
 .vscode/
 */__pycache__/
 */temp/
-/client/client.log
-/server/server.log
+/client/*.log
+/server/*.log
 *.BAK
