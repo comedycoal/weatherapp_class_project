@@ -260,7 +260,7 @@ class ServerProgram:
             an event signals a top-level disconnection of all clients' channels
     '''
 
-    def __init__(self, maxclient=MAX_CLIENTS):
+    def __init__(self):
         '''
         Constructor for ServerProgram object, creates a ServerProgramObject without opening the server
         Parameters:
@@ -269,8 +269,6 @@ class ServerProgram:
         Raises:
             RuntimeError: raised when the underlying weather or user databases is inaccessible or lacking.
         '''
-        self.maxClients = maxclient
-        self.clients = [(None, None) for _ in range(self.maxClients)]
         self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.weatherDataHandler = WeatherDataHandler(WEATHER_DATA_PATH)
         self.userDataHandler = UserDataHandler(USER_DATA_PATH)
@@ -284,7 +282,7 @@ class ServerProgram:
         MessagingHandler.UniversalRequestQueue = self.universalRequestQueue
         MessagingHandler.ServerDisconnectionEvent = self.serverDisconnectionEvent
 
-        log.info(f"Server program created. Max clients = {self.maxClients}")
+        log.info(f"Server program created.")
 
     def __del__(self):
         pass
@@ -317,10 +315,12 @@ class ServerProgram:
         processthread.join()
         log.info(f"All client handlers has terminated")
 
-    def Start(self, host=D_HOST, port=D_PORT, backlog=D_BACKLOG):
+    def Start(self, host=D_HOST, port=D_PORT, backlog=D_BACKLOG, num_clients=5):
         '''
         Callback to start the program
         '''
+        self.maxClients = num_clients
+        self.clients = [(None, None) for _ in range(self.maxClients)]
         self.connectionThread = self.OpenServer(host, port, backlog)
         log.info(f"Opened new thread {self.connectionThread} to handle server's connection requests")
 
@@ -328,6 +328,7 @@ class ServerProgram:
         log.info(f"Opened new thread {self.processthread} to handle clients' requests")
 
         self.weatherDataHandler.LoadDatabase()
+        self.userDataHandler.LoadDatabase()
 
     def End(self):
         '''
@@ -349,6 +350,8 @@ class ServerProgram:
         self.connectionThread = self.processthread = None
         log.info(f"All client handlers has terminated")
 
+        self.userDataHandler.SaveDatabase()
+
     def EnterEditMode(self):
         '''
         Start edit mode.
@@ -368,10 +371,10 @@ class ServerProgram:
             save (bool):
                 Dictates whether edits are saved or not
         '''
-        self.adminWeatherHandler = None
-
         if save:
             self.adminWeatherHandler.SaveDatabase()
+
+        self.adminWeatherHandler = None
         
         with self.weatherDatabaseLock:
             self.weatherDataHandler.LoadDatabase()
@@ -423,7 +426,7 @@ class ServerProgram:
                 id, reqID, request = self.universalRequestQueue.get()
                 reply = self.ProcessRequest(id, request)
                 if reply and self.clients[id][0].is_alive():
-                    log.info(f"Letting client {id}'s handler replying to their client")
+                    log.info(f"Letting client {id}'s handler replying to their client. Reply is {reply}")
                     self.clients[id][1].SendMessage(reply, reqID)
                 else:
                     self.clients[id] = (None, None)
