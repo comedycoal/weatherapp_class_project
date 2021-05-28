@@ -1,3 +1,4 @@
+import os.path
 import json
 from datetime import date
 from datetime import datetime
@@ -173,6 +174,8 @@ class WeatherDataHandler:
             self.id_lookup = dict()
             fromjson = None
             i = 0
+            if not os.path.isfile(self.datafilepath):
+                return True
             with open(self.datafilepath, 'r') as fp:
                 fromjson = json.load(fp)
             for citydict in fromjson:
@@ -213,15 +216,15 @@ class WeatherDataHandler:
             print(e)
             return []
 
-    def FetchForcastsByCity(self, city_id:int, mostRecentDate:date=None, count=7):
+    def FetchForcastsByCity(self, city_id:int, fromDate:date=None, count=7):
         '''
         Retrive a dictionary of weather forecasts of a city in the database in primitives, if any is found
         Parameters:
             city_id (int):
                 The city_id of the city to fetch forecasts
-            mostRecentDate (datetime.date | None): Default is None
-                The date up to which forecasts are retrieved.
-                If None is passed, fetch up to today (of client's system time)
+            fromDate (datetime.date | None): Default is None
+                The date from which forecasts are retrieved (not including itself).
+                If None is passed, fetch from tomorrow (of client's system time)
             count (int): Default is 7
                 How many dates prior to mostRecentDates to fetch forecasts of
         Returns:
@@ -240,12 +243,12 @@ class WeatherDataHandler:
             pass
 
         if city:
-            if not mostRecentDate:
-                mostRecentDate = date.today()
+            if not fromDate:
+                fromDate = date.today()
 
             weatherinfo = dict()
-            for daysPrior in range(count-1,-1,-1):
-                day = mostRecentDate - timedelta(days=daysPrior)
+            for dateDelta in range(1, count+1):
+                day = fromDate + timedelta(days=dateDelta)
                 info = city.FetchForecast(day)
                 if not info:
                     info = (None, None, None, None)
@@ -296,13 +299,13 @@ class WeatherDataModifier(WeatherDataHandler):
                 False otherwise
         '''
         try:
-            backupPath = self.datafilepath + datetime.today().strftime('%Y%m%d_%H%M%S') + '.BAK'
+            #backupPath = self.datafilepath + datetime.today().strftime('%Y%m%d_%H%M%S') + '.BAK'
             backupPath = self.datafilepath + '.BAK'
             with open(backupPath, "w") as bfp:
                 json.dump(self.backup_dict, bfp, indent='\t', cls=WeatherDataModifier.JSONEncoder)
             with open(self.datafilepath, "w") as fp:
                 json.dump(self.city_list, fp, indent='\t', cls=WeatherDataModifier.JSONEncoder)
-            return False
+            return True
         except Exception as e:
             print(e)
             return False
@@ -426,10 +429,11 @@ class WeatherDataModifier(WeatherDataHandler):
 
 
 if __name__ == '__main__':
-    import os
     from pathlib import Path
     JSON_PATH = os.path.join(Path(__file__).parent.absolute(),"data\\weather_data.json")
 
     a = WeatherDataHandler(JSON_PATH)
-    print(a.FetchForcastsByCity(32248, date(2021, 5, 23)))
-    print(a.FetchAllCitiesByDate(date(2021, 5, 19)))
+    a.LoadDatabase()
+    _, m = a.FetchForcastsByCity(32248)
+    for key, value in m[1].items():
+        print(key + ' - ' + str(value))
