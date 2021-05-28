@@ -386,7 +386,7 @@ class UpdateDatabase(object):
         self.date_box.setObjectName("date_box")
 
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "Form"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "Update Database"))
         self.WELCOME_label.setText(_translate("MainWindow", "WELCOME ADMIN"))
         self.function_label.setText(_translate("MainWindow", "Chọn chức năng"))
         self.insert_database_button.setText(_translate("MainWindow", "Thêm/Sửa\nDatabase"))

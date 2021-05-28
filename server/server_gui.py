@@ -11,19 +11,20 @@ class ServuiGUI(object):
         
     def openServer(self, MainWindow):
         host = self.host_box.text()
+        port = int(self.port_box.text())
         max_client = int(self.num_client_box.text())
         if not self.started:
             self.serverProgram = ServerProgram()
             self.started = True
-            QtWidgets.QMessageBox.about(MainWindow, "", "Kết nối thành công")
-            self.serverProgram.Start(host=host, num_clients=max_client)
+            QtWidgets.QMessageBox.about(MainWindow, "", "Mở thành công")
+            self.serverProgram.Start(host=host, port=port, num_clients=max_client)
 
     def closeServer(self, MainWindow):
         if self.started:
             self.serverProgram.End()
             self.serverProgram = None
             self.started = False
-            QtWidgets.QMessageBox.about(MainWindow, "", "Ngắt kết nối thành công")
+            QtWidgets.QMessageBox.about(MainWindow, "", "Đóng thành công")
 
     def updateDatabase(self):
         adminProgram = AdminProgram()
@@ -33,7 +34,7 @@ class ServuiGUI(object):
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(349, 309)
+        MainWindow.resize(349, 349)
 
         self.WELCOME_label = QtWidgets.QLabel(MainWindow)
         self.WELCOME_label.setGeometry(QtCore.QRect(0, 20, 351, 31))
@@ -46,6 +47,23 @@ class ServuiGUI(object):
         self.WELCOME_label.setStyleSheet("color:rgb(85, 0, 0)")
         self.WELCOME_label.setAlignment(QtCore.Qt.AlignCenter)
         self.WELCOME_label.setObjectName("WELCOME_label")
+
+        self.port_label = QtWidgets.QLabel(MainWindow)
+        self.port_label.setGeometry(QtCore.QRect(20, 110, 50, 31))
+        font = QtGui.QFont()
+        font.setFamily("Helvetica")
+        font.setPointSize(15)
+        self.port_label.setFont(font)
+        self.port_label.setObjectName("port_label")
+
+        self.port_box = QtWidgets.QLineEdit(MainWindow)
+        self.port_box.setGeometry(QtCore.QRect(80, 110, 251, 31))
+        font = QtGui.QFont()
+        font.setFamily("Helvetica")
+        font.setPointSize(14)
+        self.port_box.setFont(font)
+        self.port_box.setAlignment(QtCore.Qt.AlignCenter)
+        self.port_box.setObjectName("port_box")
 
         self.host_label = QtWidgets.QLabel(MainWindow)
         self.host_label.setGeometry(QtCore.QRect(20, 70, 50, 31))
@@ -65,7 +83,7 @@ class ServuiGUI(object):
         self.host_box.setObjectName("host_box")
 
         self.num_client_label = QtWidgets.QLabel(MainWindow)
-        self.num_client_label.setGeometry(QtCore.QRect(20, 110, 171, 31))
+        self.num_client_label.setGeometry(QtCore.QRect(20, 150, 171, 31))
         font = QtGui.QFont()
         font.setFamily("Helvetica")
         font.setPointSize(15)
@@ -73,7 +91,7 @@ class ServuiGUI(object):
         self.num_client_label.setObjectName("num_client_label")
 
         self.num_client_box = QtWidgets.QLineEdit(MainWindow)
-        self.num_client_box.setGeometry(QtCore.QRect(210, 110, 121, 31))
+        self.num_client_box.setGeometry(QtCore.QRect(210, 150, 121, 31))
         font = QtGui.QFont()
         font.setFamily("Helvetica")
         font.setPointSize(14)
@@ -82,7 +100,7 @@ class ServuiGUI(object):
         self.num_client_box.setObjectName("num_client_box")
 
         self.opensv_button = QtWidgets.QPushButton(MainWindow, clicked = lambda:self.openServer(MainWindow))
-        self.opensv_button.setGeometry(QtCore.QRect(20, 150, 141, 61))
+        self.opensv_button.setGeometry(QtCore.QRect(20, 190, 141, 61))
         font = QtGui.QFont()
         font.setFamily("Helvetica")
         font.setPointSize(16)
@@ -93,7 +111,7 @@ class ServuiGUI(object):
         self.opensv_button.setObjectName("opensv_button")
 
         self.closesv_button = QtWidgets.QPushButton(MainWindow, clicked = lambda:self.closeServer(MainWindow))
-        self.closesv_button.setGeometry(QtCore.QRect(170, 150, 161, 61))
+        self.closesv_button.setGeometry(QtCore.QRect(170, 190, 161, 61))
         font = QtGui.QFont()
         font.setFamily("Helvetica")
         font.setPointSize(16)
@@ -104,7 +122,7 @@ class ServuiGUI(object):
         self.closesv_button.setObjectName("closesv_button")
 
         self.update_database_button = QtWidgets.QPushButton(MainWindow, clicked = lambda:self.updateDatabase())
-        self.update_database_button.setGeometry(QtCore.QRect(20, 220, 311, 61))
+        self.update_database_button.setGeometry(QtCore.QRect(20, 260, 311, 61))
         font = QtGui.QFont()
         font.setFamily("Helvetica")
         font.setPointSize(16)
@@ -117,7 +135,9 @@ class ServuiGUI(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "Server"))
         self.host_label.setText(_translate("MainWindow", "Host"))
+        self.port_label.setText(_translate("MainWindow", "Port"))
         self.host_box.setText(_translate("MainWindow", "127.0.0.1"))
+        self.port_box.setText(_translate("MainWindow", "7878"))
         self.num_client_label.setText(_translate("MainWindow", "Số client tối đa"))
         self.num_client_box.setText(_translate("MainWindow", "10"))
         self.WELCOME_label.setText(_translate("MainWindow", "SERVER"))

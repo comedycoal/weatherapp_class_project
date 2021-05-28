@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from logging import error
-from PySide2 import QtCore, QtGui, QtWidgets
-from PySide2.QtWidgets import QMessageBox, QWidget
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import QMessageBox, QWidget
 from client import ClientProgram
 from weather_forecast_gui import WeatherWindow
 
@@ -100,7 +100,8 @@ class LoginWindow(object):
         self.findpassword_label.setAlignment(QtCore.Qt.AlignCenter)
         self.findpassword_label.setObjectName("findpassword_label")
         self.findpassword_label.raise_()
-        self.findpassword_label.setText(_translate("MainWindow", "Forgot password?"))     
+        self.findpassword_label.setText(_translate("MainWindow", "Forgot password?"))
+        self.findpassword_label.hide()   
 
         self.findpassword_button = QtWidgets.QPushButton(MainWindow, clicked = lambda:self.onFindpassword())
         self.findpassword_button.setGeometry(QtCore.QRect(300, 370, 121, 28))
@@ -111,6 +112,7 @@ class LoginWindow(object):
         self.findpassword_button.setObjectName("findpassword_button")
         self.findpassword_button.raise_()
         self.findpassword_button.setText(_translate("MainWindow", "Click here"))     
+        self.findpassword_button.hide()
 
         self.signup_label = QtWidgets.QLabel(MainWindow)
         self.signup_label.setGeometry(QtCore.QRect(490, 350, 121, 21))
@@ -188,8 +190,8 @@ class LoginWindow(object):
         self.username_box.show()
         self.password_box.show()
         self.login_button.show()
-        self.findpassword_label.show()
-        self.findpassword_button.show()
+        self.findpassword_label.hide()
+        self.findpassword_button.hide()
         self.signup_label.show()
         self.signup_button.show()
         self.findpassword_button_2.hide()
@@ -249,10 +251,12 @@ class LoginWindow(object):
         password = self.password_box.text()
         state, _ = clientProgram.Register(username, password)
 
-        if state:
+        if state == ClientProgram.State.SUCCEEDED:
             QMessageBox.about(MainWindow, "", "Đăng ký thành công")
-        else:
+        elif state == ClientProgram.State.FAILED:
             QMessageBox.about(MainWindow, "", "Username đã tồn tại!")
+        else:
+            QMessageBox.about(MainWindow, "","Lỗi kết nối đến server")
 
     def returnPassword(self, MainWindow, clientProgram):
         

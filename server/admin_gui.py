@@ -23,10 +23,10 @@ class AdminProgram():
         data = json.load(file)
         if data[0]["admin_username"] != username:
             file.close()
-            QtWidgets.QMessageBox.about(MainWindow, "" , "Wrong admin username")
+            QtWidgets.QMessageBox.about(MainWindow, "" , "Admin username: admin")
         elif data[0]["admin_password"] != password:
             file.close()
-            QtWidgets.QMessageBox.about(MainWindow, "" , "Wrong admin password")
+            QtWidgets.QMessageBox.about(MainWindow, "" , "Admin password: admin")
         else:
             file.close()
             updateDatabase = UpdateDatabase()
@@ -78,7 +78,7 @@ class AdminProgram():
         self.login_button.setObjectName("login_button")
 
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "Login"))
         self.WELCOME_label.setText(_translate("MainWindow", "Welcome Admin"))
         self.username_box.setText(_translate("MainWindow", "Username"))
         self.password_box.setText(_translate("MainWindow", "Password"))
