@@ -24,7 +24,7 @@ HEADER_LENGTH = 8
 ID_LENGTH = 4
 
 WEATHER_DATA_PATH = os.path.join(Path(__file__).parent.absolute(),"data\\weather_data.json")
-USER_DATA_PATH = os.path.join(Path(__file__).parent.absolute(),"data\\users.json")
+USER_DATA_PATH = os.path.join(Path(__file__).parent.absolute(),"data\\user_data.json")
 
 LOG_PATH = os.path.join(Path(__file__).parent.absolute(),"server.log")
 
@@ -336,6 +336,7 @@ class ServerProgram:
         log.info(f"Opened new thread {self.processthread} to handle clients' requests")
 
         self.weatherDataHandler.LoadDatabase()
+        self.userDataHandler.LoadDatabase()
 
     def End(self):
         '''
@@ -356,6 +357,8 @@ class ServerProgram:
             self.processthread.join()
         self.connectionThread = self.processthread = None
         log.info(f"All client handlers has terminated")
+
+        self.userDataHandler.SaveDatabase()
 
     def EnterEditMode(self):
         '''
@@ -380,10 +383,10 @@ class ServerProgram:
             save (bool):
                 Dictates whether edits are saved or not
         '''
-        self.adminWeatherHandler = None
-
         if save:
             self.adminWeatherHandler.SaveDatabase()
+
+        self.adminWeatherHandler = None
         
         with self.weatherDatabaseLock:
             self.weatherDataHandler.LoadDatabase()
@@ -436,7 +439,7 @@ class ServerProgram:
                 id, reqID, request = self.universalRequestQueue.get()
                 reply = self.ProcessRequest(id, request)
                 if reply and self.clients[id][0].is_alive():
-                    log.info(f"Letting client {id}'s handler replying to their client")
+                    log.info(f"Letting client {id}'s handler replying to their client. Reply is {reply}")
                     self.clients[id][1].SendMessage(reply, reqID)
                 else:
                     self.clients[id] = (None, None)

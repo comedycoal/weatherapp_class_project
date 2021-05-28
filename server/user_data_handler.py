@@ -38,7 +38,6 @@ class UserDataHandler:
         self.users = None
         self.backup = None
         self.adminUser = None
-        self.LoadDatabase()
 
     def Verify(self, username, password):
         assert self.users is not None, "Database is not loaded"
@@ -129,7 +128,9 @@ if __name__ == '__main__':
     
     JSON_PATH = os.path.join(Path(__file__).parent.absolute(),"data\\user_data.json")
     a = UserDataHandler(JSON_PATH)
+    a.LoadDatabase()
     a.Register('aaaa', '111')
     a.Register('bbbb', '222')
     a.Register('cccd', '333')
+    print(a.Verify('aadaa', '222'))
     a.SaveDatabase()
