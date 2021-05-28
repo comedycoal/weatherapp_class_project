@@ -3,10 +3,17 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 import json
 from server import ServerProgram
+from update_database_gui import UpdateDatabase
 from user_data_handler import UserDataHandler
 from weather_data_handler import WeatherDataHandler
 
-class AdminProgram(object):
+class AdminProgram():
+
+    def showWidgets(self):
+        self.WELCOME_label.show()
+        self.username_box.show()
+        self.password_box.show()
+        self.login_button.show()
 
     def Login(self, MainWindow, serverProgram):
         username = self.username_box.text()
@@ -14,18 +21,19 @@ class AdminProgram(object):
 
         file = open("data/user_data.json", )
         data = json.load(file)
-        if data[0]["username"] != username:
+        if data[0]["admin_username"] != username:
             file.close()
             QtWidgets.QMessageBox.about(MainWindow, "" , "Wrong admin username")
-        elif data[0]["password"] != password:
+        elif data[0]["admin_password"] != password:
             file.close()
             QtWidgets.QMessageBox.about(MainWindow, "" , "Wrong admin password")
         else:
             file.close()
+            updateDatabase = UpdateDatabase()
+            updateDatabase_Window = QtWidgets.QWidget()
+            updateDatabase.setupUi(updateDatabase_Window, serverProgram)
+            updateDatabase_Window.show()
             # Create a window allow admin update weather data
-
-        pass
-
 
     def setupUi(self, MainWindow, serverProgram):
         MainWindow.setObjectName("MainWindow")
@@ -61,7 +69,7 @@ class AdminProgram(object):
         self.password_box.setClearButtonEnabled(True)
         self.password_box.setObjectName("password_box")
 
-        self.login_button = QtWidgets.QPushButton(MainWindow, clicked = lambda:self.Login(serverProgram))
+        self.login_button = QtWidgets.QPushButton(MainWindow, clicked = lambda:self.Login(MainWindow, serverProgram))
         self.login_button.setGeometry(QtCore.QRect(120, 190, 121, 41))
         font = QtGui.QFont()
         font.setFamily("Helvetica")
@@ -78,12 +86,25 @@ class AdminProgram(object):
 
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
+        self.showWidgets()
+
+    
 
 if __name__ == "__main__":
     import sys
+    from os import environ
+
+    def suppress_qt_warnings():
+        environ["QT_DEVICE_PIXEL_RATIO"] = "0"
+        environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
+        environ["QT_SCREEN_SCALE_FACTORS"] = "1"
+        environ["QT_SCALE_FACTOR"] = "1"
+
+    suppress_qt_warnings()
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QWidget()
     ui = AdminProgram()
-    ui.setupUi(MainWindow)
+    serverProgram = ServerProgram()
+    ui.setupUi(MainWindow, serverProgram)
     MainWindow.show()
     sys.exit(app.exec_())

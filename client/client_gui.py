@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import sys
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QMessageBox, QWidget
-from PyQt5.sip import enableautoconversion
+from PySide2 import QtCore, QtGui, QtWidgets
+from PySide2.QtWidgets import QMessageBox, QWidget
 
 from client import ClientProgram
 from login_window_gui import LoginWindow
@@ -16,10 +15,10 @@ class ClientUI(object):
 
     def Connect(self, MainWindow):
         ip = self.IP_box.text()
-        port = self.port_box.text()
+        port = int(self.port_box.text())
         
         state = self.clientProgram.Connect(ip, port)
-        if state == False:
+        if state:
             QMessageBox.about(MainWindow, "", "Kết nối thành công")
             self.connect_button.hide()
             self.disconnect_button.show()
@@ -37,7 +36,6 @@ class ClientUI(object):
         self.connect_button.show()
 
     def setupUi(self, MainWindow):
-        
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(282, 214)
         _translate = QtCore.QCoreApplication.translate
@@ -112,6 +110,16 @@ class ClientUI(object):
 
 
 if __name__ == "__main__":
+    from os import environ
+
+    def suppress_qt_warnings():
+        environ["QT_DEVICE_PIXEL_RATIO"] = "0"
+        environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
+        environ["QT_SCREEN_SCALE_FACTORS"] = "1"
+        environ["QT_SCALE_FACTOR"] = "1"
+
+    suppress_qt_warnings()
+
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QWidget()
     ui = ClientUI()

@@ -43,16 +43,22 @@ class WeatherWindow(object):
     
     def onViewCity(self, MainWindow, clientProgram):
         city = self.city_box.text()
-        if city not in self.weatherdata["city_name"]:
-            QtWidgets.QMessageBox.about(MainWindow, "", "Sai tên thành phố hoặc không có dữ liệu")
+        if self.weatherdata == None:
+            QtWidgets.QMessageBox.about(MainWindow, "", "Chưa có dữ liệu, vui lòng chọn chức năng còn lại trước")
+            self.onReturn()
         else:
-            city_id = self.weatherdata["city_id"]
-            state, data = clientProgram.RequestWeatherDate7DaysOf(city_id)
-
-            if state != clientProgram.State.SUCCEEDED:
-                QtWidgets.QMessageBox.about(MainWindow, "", "Lỗi kết nối tới server")
+            city_id = None
+            for data in self.weatherdata:
+                if data["city_name"] == city:
+                    city_id = self.weatherdata["city_id"]
+            if city_id == None:
+                QtWidgets.QMessageBox.about(MainWindow, "", "Sai tên thành phố hoặc không có dữ liệu về thành phố")
             else:
-                self.viewCity(MainWindow, data)
+                state, data = clientProgram.RequestWeatherDate7DaysOf(city_id)
+                if state != clientProgram.State.SUCCEEDED:
+                    QtWidgets.QMessageBox.about(MainWindow, "", "Lỗi kết nối tới server")
+                else:
+                    self.viewCity(MainWindow, data)
 
     def viewCity(self, MainWindow, data):
         viewCityWeather = ViewCityWeather()
@@ -70,7 +76,7 @@ class WeatherWindow(object):
         self.date_table.hide()
         pass
 
-    def onViewDate(self, MainWindow, clientProgram):
+    def onViewDate(self, MainWindow, clientProgram:ClientProgram):
         day = self.date_box.text()
         if day == 'today':
             state, self.weatherdata = clientProgram.RequestWeatherDataAll(datetime.date.today().strftime('%Y/%m/%d'))
@@ -80,23 +86,25 @@ class WeatherWindow(object):
         if state != clientProgram.State.SUCCEEDED:
             QtWidgets.QMessageBox.about(MainWindow, "", "Lỗi kết nối tới server")
         else:
+            print(self.weatherdata)
             while (self.date_table.rowCount() > 1):
                 self.date_table.removeRow(1)
-            for i in range(len(self.weatherdata[0])):
+                
+            for i in range(len(self.weatherdata)):
+                self.date_table.insertRow(i+1)
                 for j in range(6):
                     item = QtWidgets.QTableWidgetItem()
                     item.setTextAlignment(QtCore.Qt.AlignCenter)
                     font = QtGui.QFont()
                     font.setFamily("Helvetica")
                     item.setFont(font)
-                    if j < 5:
-                        item.setText(str(self.weatherdata[i][j]))
-                    else:
-                        item.setText(self.weatherdata[i][j].strftime('%Y/%m/%d'))
-                    self.date_table.setItem(i+1, j+1, item)
+                    
+                    item.setText(str(self.weatherdata[i][j]))
+                    self.date_table.setItem(i+1, j, item)
             self.date_table.show()
     
     def setupUi(self, MainWindow, clientProgram):
+        self.weatherdata = None
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(900, 502)
         _translate = QtCore.QCoreApplication.translate
@@ -184,7 +192,7 @@ class WeatherWindow(object):
         self.func1_button.setFont(font)
         self.func1_button.setObjectName("func1_button")
         self.func1_button.setText(_translate("MainWindow", "Xem thông tin \nthời tiết của\nmột thành phố"))
-        self.func1_button.hide()
+        self.func1_button.show()
 
         self.func2_button = QtWidgets.QPushButton(MainWindow, clicked = lambda:self.onFunc2(MainWindow, clientProgram))
         self.func2_button.setGeometry(QtCore.QRect(530, 200, 201, 211))
@@ -316,6 +324,7 @@ if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QWidget()
     ui = WeatherWindow()
-    ui.setupUi(MainWindow)
+    clientProgram = ClientProgram()
+    ui.setupUi(MainWindow, clientProgram)
     MainWindow.show()
     sys.exit(app.exec_())

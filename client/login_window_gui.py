@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from logging import error
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QMessageBox, QWidget
+from PySide2 import QtCore, QtGui, QtWidgets
+from PySide2.QtWidgets import QMessageBox, QWidget
 from client import ClientProgram
 from weather_forecast_gui import WeatherWindow
 
@@ -90,7 +90,7 @@ class LoginWindow(object):
         self.login_button.setText(_translate("MainWindow", "Login"))
 
         self.findpassword_label = QtWidgets.QLabel(MainWindow)
-        self.findpassword_label.setGeometry(QtCore.QRect(300, 350, 121, 21))
+        self.findpassword_label.setGeometry(QtCore.QRect(300, 350, 131, 21))
         font = QtGui.QFont()
         font.setFamily("Helvetica")
         font.setPointSize(10)
@@ -136,7 +136,7 @@ class LoginWindow(object):
         self.signup_button.setText(_translate("MainWindow", "Click here"))
 
         self.findpassword_button_2 = QtWidgets.QPushButton(MainWindow, clicked = lambda:self.returnPassword(MainWindow, clientProgram))
-        self.findpassword_button_2.setGeometry(QtCore.QRect(390, 280, 131, 41))
+        self.findpassword_button_2.setGeometry(QtCore.QRect(385, 280, 141, 41))
         font = QtGui.QFont()
         font.setFamily("Helvetica")
         font.setPointSize(12)
@@ -198,17 +198,19 @@ class LoginWindow(object):
         self.return_button.hide()
         pass
 
-    def onLogin(self, MainWindow, clientProgram):
+    def onLogin(self, MainWindow, clientProgram:ClientProgram):
         username = self.username_box.text()
         password = self.password_box.text()
         state, error = clientProgram.Login(username, password)
 
-        if error == None:
+        if state == ClientProgram.State.SUCCEEDED:
             QMessageBox.about(MainWindow, "", "Đăng nhập thành công")
             weatherWindow = WeatherWindow()
             weatherWindow.setupUi(MainWindow, clientProgram)
+        elif state == ClientProgram.State.FAILED:
+            QMessageBox.about(MainWindow, "Đăng nhập thất bại. Lỗi:", error)
         else:
-            QMessageBox.about(MainWindow, "", error)
+            QMessageBox.about(MainWindow, "","Lỗi kết nối đến server")
 
         pass
 
@@ -245,15 +247,15 @@ class LoginWindow(object):
     def onRegister(self, MainWindow, clientProgram):
         username = self.username_box.text()
         password = self.password_box.text()
-        state, error = clientProgram.Register(username, password)
+        state, _ = clientProgram.Register(username, password)
 
-        if error == None:
+        if state:
             QMessageBox.about(MainWindow, "", "Đăng ký thành công")
         else:
             QMessageBox.about(MainWindow, "", "Username đã tồn tại!")
 
     def returnPassword(self, MainWindow, clientProgram):
-
+        
         self.label_2.show()
         pass
 
@@ -262,6 +264,7 @@ if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QWidget()
     ui = LoginWindow()
-    ui.setupUi(MainWindow)
+    clientProgram = ClientProgram()
+    ui.setupUi(MainWindow, clientProgram)
     MainWindow.show()
     sys.exit(app.exec_())
