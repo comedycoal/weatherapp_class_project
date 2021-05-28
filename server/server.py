@@ -267,7 +267,7 @@ class ServerProgram:
             an event signals a top-level disconnection of all clients' channels
     '''
 
-    def __init__(self, maxclient=MAX_CLIENTS):
+    def __init__(self):
         '''
         Constructor for ServerProgram object, creates a ServerProgramObject without opening the server
 
@@ -277,8 +277,6 @@ class ServerProgram:
         Raises:
             RuntimeError: raised when the underlying weather or user databases is inaccessible or lacking.
         '''
-        self.maxClients = maxclient
-        self.clients = [(None, None) for _ in range(self.maxClients)]
         self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.weatherDataHandler = WeatherDataHandler(WEATHER_DATA_PATH)
         self.userDataHandler = UserDataHandler(USER_DATA_PATH)
@@ -292,7 +290,7 @@ class ServerProgram:
         MessagingHandler.UniversalRequestQueue = self.universalRequestQueue
         MessagingHandler.ServerDisconnectionEvent = self.serverDisconnectionEvent
 
-        log.info(f"Server program created. Max clients = {self.maxClients}")
+        log.info(f"Server program created.")
 
     def __del__(self):
         pass
@@ -325,10 +323,12 @@ class ServerProgram:
         processthread.join()
         log.info(f"All client handlers has terminated")
 
-    def Start(self, host=D_HOST, port=D_PORT, backlog=D_BACKLOG):
+    def Start(self, host=D_HOST, port=D_PORT, backlog=D_BACKLOG, num_clients=5):
         '''
         Callback to start the program
         '''
+        self.maxClients = num_clients
+        self.clients = [(None, None) for _ in range(self.maxClients)]
         self.connectionThread = self.OpenServer(host, port, backlog)
         log.info(f"Opened new thread {self.connectionThread} to handle server's connection requests")
 
