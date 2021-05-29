@@ -8,7 +8,7 @@ from weather_forecast_gui import WeatherWindow
 
 class LoginWindow(object):
 
-    def setupUi(self, MainWindow, clientProgram):
+    def setupUI(self, MainWindow, clientProgram):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(900, 502)
         _translate = QtCore.QCoreApplication.translate
@@ -90,7 +90,7 @@ class LoginWindow(object):
         self.login_button.setText(_translate("MainWindow", "Login"))
 
         self.findpassword_label = QtWidgets.QLabel(MainWindow)
-        self.findpassword_label.setGeometry(QtCore.QRect(300, 350, 121, 21))
+        self.findpassword_label.setGeometry(QtCore.QRect(300, 350, 131, 21))
         font = QtGui.QFont()
         font.setFamily("Helvetica")
         font.setPointSize(10)
@@ -100,7 +100,8 @@ class LoginWindow(object):
         self.findpassword_label.setAlignment(QtCore.Qt.AlignCenter)
         self.findpassword_label.setObjectName("findpassword_label")
         self.findpassword_label.raise_()
-        self.findpassword_label.setText(_translate("MainWindow", "Forgot password?"))     
+        self.findpassword_label.setText(_translate("MainWindow", "Forgot password?"))
+        self.findpassword_label.hide()   
 
         self.findpassword_button = QtWidgets.QPushButton(MainWindow, clicked = lambda:self.onFindpassword())
         self.findpassword_button.setGeometry(QtCore.QRect(300, 370, 121, 28))
@@ -111,6 +112,7 @@ class LoginWindow(object):
         self.findpassword_button.setObjectName("findpassword_button")
         self.findpassword_button.raise_()
         self.findpassword_button.setText(_translate("MainWindow", "Click here"))     
+        self.findpassword_button.hide()
 
         self.signup_label = QtWidgets.QLabel(MainWindow)
         self.signup_label.setGeometry(QtCore.QRect(490, 350, 121, 21))
@@ -136,7 +138,7 @@ class LoginWindow(object):
         self.signup_button.setText(_translate("MainWindow", "Click here"))
 
         self.findpassword_button_2 = QtWidgets.QPushButton(MainWindow, clicked = lambda:self.returnPassword(MainWindow, clientProgram))
-        self.findpassword_button_2.setGeometry(QtCore.QRect(390, 280, 131, 41))
+        self.findpassword_button_2.setGeometry(QtCore.QRect(385, 280, 141, 41))
         font = QtGui.QFont()
         font.setFamily("Helvetica")
         font.setPointSize(12)
@@ -206,11 +208,11 @@ class LoginWindow(object):
         if state == ClientProgram.State.SUCCEEDED:
             QMessageBox.about(MainWindow, "", "Đăng nhập thành công")
             weatherWindow = WeatherWindow()
-            weatherWindow.setupUi(MainWindow, clientProgram)
+            weatherWindow.setupUI(MainWindow, clientProgram)
         elif state == ClientProgram.State.FAILED:
             QMessageBox.about(MainWindow, "Đăng nhập thất bại. Lỗi:", error)
         else:
-            QMessageBox.about(MainWindow, "Lỗi kết nối đến server")
+            QMessageBox.about(MainWindow, "","Lỗi kết nối đến server")
 
         pass
 
@@ -247,15 +249,17 @@ class LoginWindow(object):
     def onRegister(self, MainWindow, clientProgram):
         username = self.username_box.text()
         password = self.password_box.text()
-        state, error = clientProgram.Register(username, password)
+        state, _ = clientProgram.Register(username, password)
 
-        if error == None:
+        if state == ClientProgram.State.SUCCEEDED:
             QMessageBox.about(MainWindow, "", "Đăng ký thành công")
-        else:
+        elif state == ClientProgram.State.FAILED:
             QMessageBox.about(MainWindow, "", "Username đã tồn tại!")
+        else:
+            QMessageBox.about(MainWindow, "","Lỗi kết nối đến server")
 
     def returnPassword(self, MainWindow, clientProgram):
-
+        
         self.label_2.show()
         pass
 
@@ -264,6 +268,7 @@ if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QWidget()
     ui = LoginWindow()
-    ui.setupUi(MainWindow)
+    clientProgram = ClientProgram()
+    ui.setupUI(MainWindow, clientProgram)
     MainWindow.show()
     sys.exit(app.exec_())

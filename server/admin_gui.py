@@ -3,28 +3,31 @@
 from PySide2 import QtCore, QtGui, QtWidgets
 import json
 from server import ServerProgram
+from update_database_gui import UpdateDatabase
 from user_data_handler import UserDataHandler
 from weather_data_handler import WeatherDataHandler
 
 class AdminProgram():
+    def showWidgets(self):
+        self.WELCOME_label.show()
+        self.username_box.show()
+        self.password_box.show()
+        self.login_button.show()
 
-    def Login(self, MainWindow, serverProgram):
+    def Login(self, MainWindow, serverProgram:ServerProgram):
         username = self.username_box.text()
         password = self.password_box.text()
 
-        file = open("data/user_data.json", )
-        data = json.load(file)
-        if data[0]["username"] != username:
-            file.close()
-            QtWidgets.QMessageBox.about(MainWindow, "" , "Wrong admin username")
-        elif data[0]["password"] != password:
-            file.close()
-            QtWidgets.QMessageBox.about(MainWindow, "" , "Wrong admin password")
+        if not serverProgram.userDataHandler.VerifyAdmin(username, password):
+            QtWidgets.QMessageBox.about(MainWindow, "" , "Đăng nhập thất bại")
         else:
-            file.close()
+            updateDatabase = UpdateDatabase()
+            updateDatabase_Window = QtWidgets.QWidget()
+            updateDatabase.setupUI(updateDatabase_Window, serverProgram)
+            updateDatabase_Window.show()
             # Create a window allow admin update weather data
 
-    def setupUi(self, MainWindow, serverProgram):
+    def setupUI(self, MainWindow, serverProgram):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(362, 261)
 
@@ -58,7 +61,7 @@ class AdminProgram():
         self.password_box.setClearButtonEnabled(True)
         self.password_box.setObjectName("password_box")
 
-        self.login_button = QtWidgets.QPushButton(MainWindow, clicked = lambda:self.Login(serverProgram))
+        self.login_button = QtWidgets.QPushButton(MainWindow, clicked = lambda:self.Login(MainWindow, serverProgram))
         self.login_button.setGeometry(QtCore.QRect(120, 190, 121, 41))
         font = QtGui.QFont()
         font.setFamily("Helvetica")
@@ -75,6 +78,7 @@ class AdminProgram():
 
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
+        self.showWidgets()
 
 if __name__ == "__main__":
     import sys
@@ -90,6 +94,7 @@ if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QWidget()
     ui = AdminProgram()
-    ui.setupUi(MainWindow)
+    serverProgram = ServerProgram()
+    ui.setupUI(MainWindow, serverProgram)
     MainWindow.show()
     sys.exit(app.exec_())

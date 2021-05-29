@@ -67,7 +67,6 @@ class MessagingHandler:
     '''
     Class for handling messages to a client and back via a socket.
     Its message takes the form of: [HEADER - 8 bytes][ID - 2 bytes] <Actual Message>
-
     Messages are sent ad-hoc with SendMessage method while received messages are put to an external queue (see ListenForRequests method)
     
     Static Attributes:
@@ -77,7 +76,6 @@ class MessagingHandler:
         ServerDisconnectionEvent (threading.Event):
             A common Event for all objects of the class for additional control from the server program
             Set up an Event object prior to create any objects of this class.
-
     Attributes:
         id (int):
             an id for external identification purposes
@@ -102,7 +100,6 @@ class MessagingHandler:
     def __init__(self, id:int, clientSocket:socket.socket, addr):
         '''
         Constructor for MessagingHandler object
-
         Parameters:
             id (int): 
                 an id assigned by the server program for identification purposes
@@ -167,13 +164,11 @@ class MessagingHandler:
     def ListenForRequests(self, requestQueue:queue.Queue=None):
         '''
         Threaded - Enable message listening mechanism for a handler
-
         The method actively listens for requests
         The method terminates if:
             - The connection is lost
             - The server wants to disconnect, this will only happens once the client confirms with a specific message
             - the client wants to disconnect (via a message), this will happens once a specific message is received, regardless of unsent replies
-
         Parameters:
             requestQueue (queue.Queue):
                 The queue for requests to be put in for processing
@@ -241,10 +236,8 @@ class MessagingHandler:
 class ServerProgram:
     '''
     Base class for server side weather app program
-
     Provides a compact interface to open server and handle clients' requests
     without additional controls
-
     Attributes:
         maxClients (int):
             indicates the number of client sockets a class' object can handle at once
@@ -270,13 +263,13 @@ class ServerProgram:
     def __init__(self):
         '''
         Constructor for ServerProgram object, creates a ServerProgramObject without opening the server
-
         Parameters:
             maxclient (int): maximum amount of clients allow to connect to the server
         
         Raises:
             RuntimeError: raised when the underlying weather or user databases is inaccessible or lacking.
         '''
+        self.started = False
         self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.weatherDataHandler = WeatherDataHandler(WEATHER_DATA_PATH)
         self.userDataHandler = UserDataHandler(USER_DATA_PATH)
@@ -323,10 +316,20 @@ class ServerProgram:
         processthread.join()
         log.info(f"All client handlers has terminated")
 
+    def Initiate(self):
+        self.userDataHandler.LoadDatabase()
+        self.weatherDataHandler.LoadDatabase()
+
+    def Cleanup(self):
+        self.userDataHandler.SaveDatabase()
+
     def Start(self, host=D_HOST, port=D_PORT, backlog=D_BACKLOG, num_clients=5):
         '''
         Callback to start the program
         '''
+        if self.started:
+            return
+
         self.maxClients = num_clients
         self.clients = [(None, None) for _ in range(self.maxClients)]
         self.connectionThread = self.OpenServer(host, port, backlog)
@@ -334,14 +337,15 @@ class ServerProgram:
 
         self.processthread = self.ProcessRequestQueue()
         log.info(f"Opened new thread {self.processthread} to handle clients' requests")
-
-        self.weatherDataHandler.LoadDatabase()
-        self.userDataHandler.LoadDatabase()
+        self.started = True
 
     def End(self):
         '''
         Callback to close server and end program
         '''
+        if not self.started:
+            return
+            
         self.serverDisconnectionEvent.set()
         self.serverSocket.close()
         log.info(f"Server has issued disconnection to all clients")
@@ -357,28 +361,24 @@ class ServerProgram:
             self.processthread.join()
         self.connectionThread = self.processthread = None
         log.info(f"All client handlers has terminated")
-
-        self.userDataHandler.SaveDatabase()
+        self.started = False
 
     def EnterEditMode(self):
         '''
         Start edit mode.
-
         It is advisable to disconnect (using End method) from all clients before entering edit mode
-
         Edit mode allows an admin to edit the weather database using the returned WeatherDataModifier
         Clients can still connects to and fetch data using the old database
-
         Returns:
             adminWeatherHandler (WeatherDataModifier)
         '''
         self.adminWeatherHandler = WeatherDataModifier(WEATHER_DATA_PATH)
+        self.adminWeatherHandler.LoadDatabase()
         return self.adminWeatherHandler
 
     def ExitEditModeAndReload(self, save=True):
         '''
         End edit mode and reloads the database
-
         Parameters:
             save (bool):
                 Dictates whether edits are saved or not
@@ -431,7 +431,6 @@ class ServerProgram:
     def ProcessRequestQueue(self):
         '''
         Threaded - Enable the universalRequestQueue to be processes
-
         After a request in the queue is process, the reply will be sent back to the client immediately
         '''
         while True:
@@ -455,9 +454,7 @@ class ServerProgram:
         '''
         Determines appropriate actions for a request from client.
         Full list of all possible requests see .........
-
         A disconnection request will results in a hang for the client handler's listening thread to fully terminate before continuing
-
         Parameters:
             id (ind):
                 id of the client, dictated by the program

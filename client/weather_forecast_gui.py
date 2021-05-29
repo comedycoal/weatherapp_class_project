@@ -42,17 +42,23 @@ class WeatherWindow(object):
         self.city_box.show()
     
     def onViewCity(self, MainWindow, clientProgram):
-        city = self.city_box.text()
-        if city not in self.weatherdata["city_name"]:
-            QtWidgets.QMessageBox.about(MainWindow, "", "Sai tên thành phố hoặc không có dữ liệu")
+        city_name = self.city_box.text()
+        if self.weatherdata == None:
+            QtWidgets.QMessageBox.about(MainWindow, "", "Chưa có dữ liệu, vui lòng chọn chức năng còn lại trước")
+            self.onReturn()
         else:
-            city_id = self.weatherdata["city_id"]
-            state, data = clientProgram.RequestWeatherDate7DaysOf(city_id)
-
-            if state != clientProgram.State.SUCCEEDED:
-                QtWidgets.QMessageBox.about(MainWindow, "", "Lỗi kết nối tới server")
+            city_id = None
+            for data in self.weatherdata:
+                if data[1] == city_name:
+                    city_id = data[0]
+            if city_id == None:
+                QtWidgets.QMessageBox.about(MainWindow, "", "Sai tên thành phố hoặc không có dữ liệu về thành phố")
             else:
-                self.viewCity(MainWindow, data)
+                state, data = clientProgram.RequestWeatherDate7DaysOf(city_id)
+                if state != clientProgram.State.SUCCEEDED:
+                    QtWidgets.QMessageBox.about(MainWindow, "", "Lỗi kết nối tới server")
+                else:
+                    self.viewCity(MainWindow, data)
 
     def viewCity(self, MainWindow, data):
         viewCityWeather = ViewCityWeather()
@@ -94,10 +100,11 @@ class WeatherWindow(object):
                     item.setFont(font)
                     
                     item.setText(str(self.weatherdata[i][j]))
-                    self.date_table.setItem(i+1, j+1, item)
+                    self.date_table.setItem(i+1, j, item)
             self.date_table.show()
     
-    def setupUi(self, MainWindow, clientProgram):
+    def setupUI(self, MainWindow, clientProgram):
+        self.weatherdata = None
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(900, 502)
         _translate = QtCore.QCoreApplication.translate
@@ -185,7 +192,7 @@ class WeatherWindow(object):
         self.func1_button.setFont(font)
         self.func1_button.setObjectName("func1_button")
         self.func1_button.setText(_translate("MainWindow", "Xem thông tin \nthời tiết của\nmột thành phố"))
-        self.func1_button.hide()
+        self.func1_button.show()
 
         self.func2_button = QtWidgets.QPushButton(MainWindow, clicked = lambda:self.onFunc2(MainWindow, clientProgram))
         self.func2_button.setGeometry(QtCore.QRect(530, 200, 201, 211))
@@ -286,12 +293,12 @@ class WeatherWindow(object):
         self.date_table.verticalHeader().setMinimumSectionSize(30)
         self.date_table.verticalHeader().setSortIndicatorShown(False)
         self.date_table.verticalHeader().setStretchLastSection(False)
-        self.date_table.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
-        self.date_table.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
-        self.date_table.horizontalHeader().setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
-        self.date_table.horizontalHeader().setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)
-        self.date_table.horizontalHeader().setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)
-        self.date_table.horizontalHeader().setSectionResizeMode(5, QtWidgets.QHeaderView.ResizeToContents)
+        self.date_table.setColumnWidth(0, 70)
+        self.date_table.setColumnWidth(1, 160)
+        self.date_table.setColumnWidth(2, 120)
+        self.date_table.setColumnWidth(3, 100)
+        self.date_table.setColumnWidth(4, 100)
+        self.date_table.setColumnWidth(5, 100)
 
         __sortingEnabled = self.date_table.isSortingEnabled()
         self.date_table.setSortingEnabled(False)
@@ -317,6 +324,7 @@ if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QWidget()
     ui = WeatherWindow()
-    ui.setupUi(MainWindow)
+    clientProgram = ClientProgram()
+    ui.setupUI(MainWindow, clientProgram)
     MainWindow.show()
     sys.exit(app.exec_())

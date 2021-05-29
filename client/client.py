@@ -57,7 +57,6 @@ def threaded_daemon(func):
 class ClientProgram:
     '''
     Class for the client program that represents and encapsulates traffic and commands to and from a server for weather data
-
     Attributes:
         sock (socket.socket):
             The communication socket with the server
@@ -73,7 +72,6 @@ class ClientProgram:
         '''
         Provides an enumeration for standard communicative status between client and servers.
         All request wrapper should return a State status
-
         - SUCCEEDED: the request is sent perfectly and there might be extra data attached from the server
         - FAILED: the request is sent perfectly but the server did not process successfully
         - BADCONNECTION: the request is not sent
@@ -159,14 +157,12 @@ class ClientProgram:
     def GetReplyFor(self, id, timeout=None):
         '''
         Returns reply for a request with id in timeout seconds.
-
         Parameters:
             id (int)
             timeout (float | None): default is None
                 time to wait for reply.
                 if None, waits indefinitely.
                 Recommended to supply a timeout
-
         Returns:
             message (bytes | None)
                 any message that came through
@@ -186,11 +182,9 @@ class ClientProgram:
     def Login(self, username:str, password:str):
         '''
         Wrapper function to request to the server command 'LOGIN'
-
         Parameters:
             username (str): self-explanatory
             password (str): self-explanatory
-
         Returns:
             state (ClientProgram.State):
                 dictates the status of the request
@@ -213,11 +207,9 @@ class ClientProgram:
     def Register(self, username:str, password:str):
         '''
         Wrapper function to request to the server command 'REGISTER'
-
         Parameters:
             username (str): self-explanatory
             password (str): self-explanatory
-
         Returns:
             state (ClientProgram.State):
                 dictates the status of the request
@@ -240,11 +232,9 @@ class ClientProgram:
     def RequestWeatherDataAll(self, date:str=None):
         '''
         Wrapper function to request to the server command 'LISTALL'
-
         Parameters:
             date (datetime.date | None): default is None
                 date to query the weathers, if None is passed, request for today's
-
         Returns:
             state (ClientProgram.State):
                 dictates the status of the request
@@ -271,9 +261,7 @@ class ClientProgram:
     def RequestWeatherDate7DaysOf(self, city_id):
         '''
         Wrapper function to request to the server command 'LIST'
-
         Parameters:
-
         Returns:
             state (ClientProgram.State):
                 dictates the status of the request
@@ -304,7 +292,6 @@ class ClientProgram:
         Parameters:
             message (bytes):
                 Message to send, in bytes
-
         Returns:
             state (bool):
                 if True, the message is sent successfully
@@ -335,13 +322,11 @@ class ClientProgram:
     def ListenForMessages(self):
         '''
         Threaded - Enable message listening mechanism
-
         The method actively listens for requests
         The method terminates if:
             - The connection is lost
             - The server wants to disconnect, this will only happens once the client confirms with a specific message
             - the client wants to disconnect (via a message), this will happens once a specific message is received, regardless of unsent replies
-
         '''
         while True:
             message = None

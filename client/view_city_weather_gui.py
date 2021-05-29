@@ -2,11 +2,7 @@
 from PySide2 import QtCore, QtGui, QtWidgets
 
 class ViewCityWeather(object):
-
-
-
-    def setupUi(self, MainWindow, data):
-
+    def setupUI(self, MainWindow, data):
         self.weather_layout_background = QtWidgets.QLabel(MainWindow)
         self.weather_layout_background.setGeometry(QtCore.QRect(30, 200, 841, 261))
         self.weather_layout_background.setStyleSheet("background-color: rgb(0, 0, 127)")
@@ -427,66 +423,75 @@ class ViewCityWeather(object):
         self.date7.show()
 
     def updateForecast(self, data):
-
-        weather = ["Sunny", "Cloudy", "Sunny + Cloudy", "Rainy", "Stormy", "Lightning"]
+        
+        city_name = data[0]
+        weather_by_date_dict = data[1]
+        print(weather_by_date_dict)
+        weather = ["Sunny", "Cloudy", "Sunny + Cloudy", "Rainy", "Stormy", "Lightning",]
         weatherPic = ["Sunny.png", "Cloudy.png", "SunnyCloudy.png", "Rainy.png", "Stormy.png", "Lightning.png"]
         dataPic = []
-        for item in data:
+
+        listkeys = sorted(weather_by_date_dict)
+        listvals = [weather_by_date_dict[x] for x in listkeys]
+        for item in listvals:
+            if not item[0]:
+                dataPic.append('ukn.png')
             for i in range(6):
-                for j in range(7):
-                    if item["date_weather"][j]["info"]["weather"] == weather[i]:
-                        dataPic.append(weatherPic[i])
-        
+                if item[0] == weather[i]:
+                    dataPic.append(weatherPic[i])
+                    break
+
+        print(dataPic)
+
         _translate = QtCore.QCoreApplication.translate
 
         self.day1_pic.setPixmap(QtGui.QPixmap("pic/" + dataPic[0]))
-        self.temperature1.setText(_translate("MainWindow", str(data["date_weather"][0]["info"]["temperature"]) + chr(176) + "C"))
-        self.wind1.setText(_translate("MainWindow", "Wind: " + str(data["date_weather"][0]["date"])))
-        self.humidity1.setText(_translate("MainWindow", "Humid: " + str(data["date_weather"][0]["info"]["humidity"])))
-        self.date1.setText(_translate("MainWindow", str(data["date_weather"][0]["date"])))
+        self.temperature1.setText(_translate("MainWindow", str(listvals[0][1]) + chr(176) + "C"))
+        self.wind1.setText(_translate("MainWindow", "Wind: " + str(listvals[0][2])))
+        self.humidity1.setText(_translate("MainWindow", "Humid: " + str(listvals[0][3])))
+        self.date1.setText(_translate("MainWindow", listkeys[0]))
 
         self.day2_pic.setPixmap(QtGui.QPixmap("pic/" + dataPic[1]))
-        self.temperature2.setText(_translate("MainWindow", str(data["date_weather"][1]["info"]["temperature"]) + chr(176) + "C"))
-        self.wind2.setText(_translate("MainWindow", "Wind: " + str(data["date_weather"][1]["date"])))
-        self.humidity2.setText(_translate("MainWindow", "Humid: " + str(data["date_weather"][1]["info"]["humidity"])))
-        self.date2.setText(_translate("MainWindow", str(data["date_weather"][1]["date"])))
+        self.temperature2.setText(_translate("MainWindow", str(listvals[1][1]) + chr(176) + "C"))
+        self.wind2.setText(_translate("MainWindow", "Wind: " + str(listvals[1][2])))
+        self.humidity2.setText(_translate("MainWindow", "Humid: " + str(listvals[1][3])))
+        self.date2.setText(_translate("MainWindow", listkeys[1]))
 
         self.day3_pic.setPixmap(QtGui.QPixmap("pic/" + dataPic[2]))
-        self.temperature3.setText(_translate("MainWindow", str(data["date_weather"][2]["info"]["temperature"]) + chr(176) + "C"))
-        self.wind3.setText(_translate("MainWindow", "Wind: " + str(data["date_weather"][2]["date"])))
-        self.humidity3.setText(_translate("MainWindow", "Humid: " + str(data["date_weather"][2]["info"]["humidity"])))
-        self.date3.setText(_translate("MainWindow", str(data["date_weather"][2]["date"])))
+        self.temperature3.setText(_translate("MainWindow", str(listvals[2][1]) + chr(176) + "C"))
+        self.wind3.setText(_translate("MainWindow", "Wind: " + str(listvals[2][2])))
+        self.humidity3.setText(_translate("MainWindow", "Humid: " + str(listvals[2][3])))
+        self.date3.setText(_translate("MainWindow", listkeys[2]))
 
         self.day4_pic.setPixmap(QtGui.QPixmap("pic/" + dataPic[3]))
-        self.temperature4.setText(_translate("MainWindow", str(data["date_weather"][3]["info"]["temperature"]) + chr(176) + "C"))
-        self.wind4.setText(_translate("MainWindow", "Wind: " + str(data["date_weather"][3]["date"])))
-        self.humidity4.setText(_translate("MainWindow", "Humid: " + str(data["date_weather"][3]["info"]["humidity"])))
-        self.date4.setText(_translate("MainWindow", str(data["date_weather"][3]["date"])))
+        self.temperature4.setText(_translate("MainWindow", str(listvals[3][1]) + chr(176) + "C"))
+        self.wind4.setText(_translate("MainWindow", "Wind: " + str(listvals[3][2])))
+        self.humidity4.setText(_translate("MainWindow", "Humid: " + str(listvals[3][3])))
+        self.date4.setText(_translate("MainWindow", listkeys[3]))
 
         self.day5_pic.setPixmap(QtGui.QPixmap("pic/" + dataPic[4]))
-        self.temperature5.setText(_translate("MainWindow", str(data["date_weather"][4]["info"]["temperature"]) + chr(176) + "C"))
-        self.wind5.setText(_translate("MainWindow", "Wind: " + str(data["date_weather"][4]["date"])))
-        self.humidity5.setText(_translate("MainWindow", "Humid: " + str(data["date_weather"][4]["info"]["humidity"])))
-        self.date5.setText(_translate("MainWindow", str(data["date_weather"][4]["date"])))
-
+        self.temperature5.setText(_translate("MainWindow", str(listvals[4][1]) + chr(176) + "C"))
+        self.wind5.setText(_translate("MainWindow", "Wind: " + str(listvals[4][2])))
+        self.humidity5.setText(_translate("MainWindow", "Humid: " + str(listvals[4][3])))
+        self.date5.setText(_translate("MainWindow", listkeys[4]))
 
         self.day6_pic.setPixmap(QtGui.QPixmap("pic/" + dataPic[5]))
-        self.temperature6.setText(_translate("MainWindow", str(data["date_weather"][5]["info"]["temperature"]) + chr(176) + "C"))
-        self.wind6.setText(_translate("MainWindow", "Wind: " + str(data["date_weather"][5]["date"])))
-        self.humidity6.setText(_translate("MainWindow", "Humid: " + str(data["date_weather"][5]["info"]["humidity"])))
-        self.date6.setText(_translate("MainWindow", str(data["date_weather"][5]["date"])))
+        self.temperature6.setText(_translate("MainWindow", str(listvals[5][1]) + chr(176) + "C"))
+        self.wind6.setText(_translate("MainWindow", "Wind: " + str(listvals[5][2])))
+        self.humidity6.setText(_translate("MainWindow", "Humid: " + str(listvals[5][3])))
+        self.date6.setText(_translate("MainWindow", listkeys[5]))
 
         self.day7_pic.setPixmap(QtGui.QPixmap("pic/" + dataPic[6]))
-        self.temperature7.setText(_translate("MainWindow", str(data["date_weather"][6]["info"]["temperature"]) + chr(176) + "C"))
-        self.wind7.setText(_translate("MainWindow", "Wind: " + str(data["date_weather"][6]["date"])))
-        self.humidity7.setText(_translate("MainWindow", "Humid: " + str(data["date_weather"][6]["info"]["humidity"])))
-        self.date7.setText(_translate("MainWindow", str(data["date_weather"][6]["date"])))
+        self.temperature7.setText(_translate("MainWindow", str(listvals[6][1]) + chr(176) + "C"))
+        self.wind7.setText(_translate("MainWindow", "Wind: " + str(listvals[6][2])))
+        self.humidity7.setText(_translate("MainWindow", "Humid: " + str(listvals[6][3])))
+        self.date7.setText(_translate("MainWindow", listkeys[6]))
 
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QWidget()
     ui = ViewCityWeather()
-    ui.setupUi(MainWindow)
+    ui.setupUI(MainWindow)
     MainWindow.show()
     sys.exit(app.exec_())
