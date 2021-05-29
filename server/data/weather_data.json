@@ -20,56 +20,23 @@
 					"humidity": 0.9,
 					"wind_speed": 37.54
 				}
-			}
-		]
-	},
-	{
-		"city_id": 32248,
-		"city_name": "Ho Chi Minh",
-		"date_weather": [
+			},
 			{
-				"date": "2021/05/19",
+				"date": "2021/05/28",
 				"info": {
 					"weather": "Stormy",
-					"temperature": 34,
-					"humidity": 0.6,
-					"wind_speed": 18.7
+					"temperature": 25,
+					"humidity": 0.7,
+					"wind_speed": 24.5
 				}
 			},
 			{
-				"date": "2021/05/20",
-				"info": {
-					"weather": "Cloudy",
-					"temperature": 37,
-					"humidity": 0.5,
-					"wind_speed": 24.7
-				}
-			},
-			{
-				"date": "2021/05/21",
+				"date": "2021/06/01",
 				"info": {
 					"weather": "Rainy",
-					"temperature": 26,
-					"humidity": 0.87,
-					"wind_speed": 33.7
-				}
-			},
-			{
-				"date": "2021/05/22",
-				"info": {
-					"weather": "Sunny",
-					"temperature": 39,
-					"humidity": 0.6,
-					"wind_speed": 10.7
-				}
-			},
-			{
-				"date": "2021/05/23",
-				"info": {
-					"weather": "Sunny + Cloudy",
-					"temperature": 28,
-					"humidity": 0.6,
-					"wind_speed": 28.9
+					"temperature": 27,
+					"humidity": 0.86,
+					"wind_speed": 12.0
 				}
 			}
 		]
@@ -88,7 +55,7 @@
 				}
 			},
 			{
-				"date": "2021/05/20",
+				"date": "2021/06/01",
 				"info": {
 					"weather": "Rainy",
 					"temperature": 26,
@@ -97,7 +64,7 @@
 				}
 			},
 			{
-				"date": "2021/05/21",
+				"date": "2021/06/02",
 				"info": {
 					"weather": "Stormy",
 					"temperature": 27,
@@ -106,7 +73,7 @@
 				}
 			},
 			{
-				"date": "2021/05/22",
+				"date": "2021/06/03",
 				"info": {
 					"weather": "Stormy",
 					"temperature": 26,
@@ -115,12 +82,81 @@
 				}
 			},
 			{
-				"date": "2021/05/23",
+				"date": "2021/06/04",
 				"info": {
 					"weather": "Cloudy",
 					"temperature": 25,
 					"humidity": 0.76,
 					"wind_speed": 18.9
+				}
+			}
+		]
+	},
+	{
+		"city_id": 32248,
+		"city_name": "Ho Chi Minh",
+		"date_weather": [
+			{
+				"date": "2021/05/30",
+				"info": {
+					"weather": "a",
+					"temperature": 1,
+					"humidity": 1.0,
+					"wind_speed": 1.0
+				}
+			},
+			{
+				"date": "2021/05/31",
+				"info": {
+					"weather": "b",
+					"temperature": 2,
+					"humidity": 1.0,
+					"wind_speed": 2.0
+				}
+			},
+			{
+				"date": "2021/06/01",
+				"info": {
+					"weather": "c",
+					"temperature": 3,
+					"humidity": 1.0,
+					"wind_speed": 3.0
+				}
+			},
+			{
+				"date": "2021/06/02",
+				"info": {
+					"weather": "d",
+					"temperature": 4,
+					"humidity": 1.0,
+					"wind_speed": 4.0
+				}
+			},
+			{
+				"date": "2021/06/03",
+				"info": {
+					"weather": "e",
+					"temperature": 5,
+					"humidity": 1.0,
+					"wind_speed": 5.0
+				}
+			},
+			{
+				"date": "2021/06/04",
+				"info": {
+					"weather": "f",
+					"temperature": 6,
+					"humidity": 1.0,
+					"wind_speed": 6.0
+				}
+			},
+			{
+				"date": "2021/06/05",
+				"info": {
+					"weather": "g",
+					"temperature": 7,
+					"humidity": 1.0,
+					"wind_speed": 7.0
 				}
 			}
 		]

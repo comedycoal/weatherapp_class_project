@@ -25,7 +25,7 @@ class ClientUI(object):
 
             login_window_ui = LoginWindow()
             self.loginWindow = QWidget()
-            login_window_ui.setupUi(self.loginWindow, self.clientProgram)
+            login_window_ui.setupUI(self.loginWindow, self.clientProgram)
             self.loginWindow.show()
         else:
             QMessageBox.about(MainWindow, "", "Kết nối thất bại")
@@ -35,7 +35,7 @@ class ClientUI(object):
         self.disconnect_button.hide()
         self.connect_button.show()
 
-    def setupUi(self, MainWindow):
+    def setupUI(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(282, 214)
         _translate = QtCore.QCoreApplication.translate
@@ -123,6 +123,6 @@ if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QWidget()
     ui = ClientUI()
-    ui.setupUi(MainWindow)
+    ui.setupUI(MainWindow)
     MainWindow.show()
     sys.exit(app.exec_())

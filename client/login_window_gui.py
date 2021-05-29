@@ -1,14 +1,18 @@
 # -*- coding: utf-8 -*-
 
+import os.path
+from pathlib import Path
 from logging import error
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QMessageBox, QWidget
+from PySide2 import QtCore, QtGui, QtWidgets
+from PySide2.QtWidgets import QMessageBox, QWidget
 from client import ClientProgram
 from weather_forecast_gui import WeatherWindow
 
+PIC_PATH = os.path.join(Path(__file__).parent.absolute(),"pic")
+
 class LoginWindow(object):
 
-    def setupUi(self, MainWindow, clientProgram):
+    def setupUI(self, MainWindow, clientProgram):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(900, 502)
         _translate = QtCore.QCoreApplication.translate
@@ -18,7 +22,7 @@ class LoginWindow(object):
         self.background_image.setGeometry(QtCore.QRect(0, 0, 901, 501))
         self.background_image.setAutoFillBackground(False)
         self.background_image.setText("")
-        self.background_image.setPixmap(QtGui.QPixmap("pic/background-login.jpg"))
+        self.background_image.setPixmap(QtGui.QPixmap(os.path.join(PIC_PATH, "background-login.jpg")))
         self.background_image.setScaledContents(True)
         self.background_image.setObjectName("label")
         self.background_image.raise_()
@@ -30,7 +34,7 @@ class LoginWindow(object):
         self.login_window_image.setContextMenuPolicy(QtCore.Qt.NoContextMenu)
         self.login_window_image.setAutoFillBackground(False)
         self.login_window_image.setText("")
-        self.login_window_image.setPixmap(QtGui.QPixmap("pic/background_login_box.jpg"))
+        self.login_window_image.setPixmap(QtGui.QPixmap(os.path.join(PIC_PATH, "background_login_box.jpg")))
         self.login_window_image.setScaledContents(True)
         self.login_window_image.setObjectName("login_window_label")
         self.login_window_image.raise_()
@@ -190,8 +194,8 @@ class LoginWindow(object):
         self.username_box.show()
         self.password_box.show()
         self.login_button.show()
-        self.findpassword_label.hide()
-        self.findpassword_button.hide()
+        self.findpassword_label.show()
+        self.findpassword_button.show()
         self.signup_label.show()
         self.signup_button.show()
         self.findpassword_button_2.hide()
@@ -208,7 +212,7 @@ class LoginWindow(object):
         if state == ClientProgram.State.SUCCEEDED:
             QMessageBox.about(MainWindow, "", "Đăng nhập thành công")
             weatherWindow = WeatherWindow()
-            weatherWindow.setupUi(MainWindow, clientProgram)
+            weatherWindow.setupUI(MainWindow, clientProgram)
         elif state == ClientProgram.State.FAILED:
             QMessageBox.about(MainWindow, "Đăng nhập thất bại. Lỗi:", error)
         else:
@@ -269,6 +273,6 @@ if __name__ == "__main__":
     MainWindow = QtWidgets.QWidget()
     ui = LoginWindow()
     clientProgram = ClientProgram()
-    ui.setupUi(MainWindow, clientProgram)
+    ui.setupUI(MainWindow, clientProgram)
     MainWindow.show()
     sys.exit(app.exec_())

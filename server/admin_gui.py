@@ -8,34 +8,26 @@ from user_data_handler import UserDataHandler
 from weather_data_handler import WeatherDataHandler
 
 class AdminProgram():
-
     def showWidgets(self):
         self.WELCOME_label.show()
         self.username_box.show()
         self.password_box.show()
         self.login_button.show()
 
-    def Login(self, MainWindow, serverProgram):
+    def Login(self, MainWindow, serverProgram:ServerProgram):
         username = self.username_box.text()
         password = self.password_box.text()
 
-        file = open("data/user_data.json", )
-        data = json.load(file)
-        if data[0]["admin_username"] != username:
-            file.close()
-            QtWidgets.QMessageBox.about(MainWindow, "" , "Admin username: admin")
-        elif data[0]["admin_password"] != password:
-            file.close()
-            QtWidgets.QMessageBox.about(MainWindow, "" , "Admin password: admin")
+        if not serverProgram.userDataHandler.VerifyAdmin(username, password):
+            QtWidgets.QMessageBox.about(MainWindow, "Đăng nhập thất bại" , "username/password: admin/admin")
         else:
-            file.close()
             updateDatabase = UpdateDatabase()
             updateDatabase_Window = QtWidgets.QWidget()
-            updateDatabase.setupUi(updateDatabase_Window, serverProgram)
+            updateDatabase.setupUI(updateDatabase_Window, serverProgram)
             updateDatabase_Window.show()
             # Create a window allow admin update weather data
 
-    def setupUi(self, MainWindow, serverProgram):
+    def setupUI(self, MainWindow, serverProgram):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(362, 261)
 
@@ -78,7 +70,7 @@ class AdminProgram():
         self.login_button.setObjectName("login_button")
 
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "Login"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.WELCOME_label.setText(_translate("MainWindow", "Welcome Admin"))
         self.username_box.setText(_translate("MainWindow", "Username"))
         self.password_box.setText(_translate("MainWindow", "Password"))
@@ -87,8 +79,6 @@ class AdminProgram():
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
         self.showWidgets()
-
-    
 
 if __name__ == "__main__":
     import sys
@@ -105,6 +95,6 @@ if __name__ == "__main__":
     MainWindow = QtWidgets.QWidget()
     ui = AdminProgram()
     serverProgram = ServerProgram()
-    ui.setupUi(MainWindow, serverProgram)
+    ui.setupUI(MainWindow, serverProgram)
     MainWindow.show()
     sys.exit(app.exec_())

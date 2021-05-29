@@ -269,6 +269,7 @@ class ServerProgram:
         Raises:
             RuntimeError: raised when the underlying weather or user databases is inaccessible or lacking.
         '''
+        self.started = False
         self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.weatherDataHandler = WeatherDataHandler(WEATHER_DATA_PATH)
         self.userDataHandler = UserDataHandler(USER_DATA_PATH)
@@ -315,10 +316,20 @@ class ServerProgram:
         processthread.join()
         log.info(f"All client handlers has terminated")
 
+    def Initiate(self):
+        self.userDataHandler.LoadDatabase()
+        self.weatherDataHandler.LoadDatabase()
+
+    def Cleanup(self):
+        self.userDataHandler.SaveDatabase()
+
     def Start(self, host=D_HOST, port=D_PORT, backlog=D_BACKLOG, num_clients=5):
         '''
         Callback to start the program
         '''
+        if self.started:
+            return
+
         self.maxClients = num_clients
         self.clients = [(None, None) for _ in range(self.maxClients)]
         self.connectionThread = self.OpenServer(host, port, backlog)
@@ -326,14 +337,15 @@ class ServerProgram:
 
         self.processthread = self.ProcessRequestQueue()
         log.info(f"Opened new thread {self.processthread} to handle clients' requests")
-
-        self.weatherDataHandler.LoadDatabase()
-        self.userDataHandler.LoadDatabase()
+        self.started = True
 
     def End(self):
         '''
         Callback to close server and end program
         '''
+        if not self.started:
+            return
+            
         self.serverDisconnectionEvent.set()
         self.serverSocket.close()
         log.info(f"Server has issued disconnection to all clients")
@@ -349,8 +361,7 @@ class ServerProgram:
             self.processthread.join()
         self.connectionThread = self.processthread = None
         log.info(f"All client handlers has terminated")
-
-        self.userDataHandler.SaveDatabase()
+        self.started = False
 
     def EnterEditMode(self):
         '''
@@ -362,6 +373,7 @@ class ServerProgram:
             adminWeatherHandler (WeatherDataModifier)
         '''
         self.adminWeatherHandler = WeatherDataModifier(WEATHER_DATA_PATH)
+        self.adminWeatherHandler.LoadDatabase()
         return self.adminWeatherHandler
 
     def ExitEditModeAndReload(self, save=True):

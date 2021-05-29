@@ -42,6 +42,8 @@ class UserDataHandler:
     def Verify(self, username, password):
         assert self.users is not None, "Database is not loaded"
 
+        print(username, password)
+        print(self.users)
         if username in self.users:
             if self.users[username] == password:
                 return UserDataHandler.LoginState.VALID
@@ -53,7 +55,7 @@ class UserDataHandler:
     def VerifyAdmin(self, username, password):
         assert self.users is not None, "Database is not loaded"
 
-        if username == self.adminUser[0] and password == self.adminUser[1]:
+        if username == self.adminUser.username and password == self.adminUser.password:
             return True
         
         return False
@@ -103,9 +105,10 @@ class UserDataHandler:
             
             if not self.adminUser:
                 self.adminUser = AdminUser('admin', 'admin')
+
+            print(self.users)
             return True
         except Exception as e:
-            print(e)
             return False
 
     def SaveDatabase(self):
@@ -132,5 +135,5 @@ if __name__ == '__main__':
     a.Register('aaaa', '111')
     a.Register('bbbb', '222')
     a.Register('cccd', '333')
-    print(a.Verify('aadaa', '222'))
+    print(a.adminUser.username)
     a.SaveDatabase()
