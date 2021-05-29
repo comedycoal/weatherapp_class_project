@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
 
+import os.path
+from pathlib import Path
 from logging import error
 from PySide2 import QtCore, QtGui, QtWidgets
 from PySide2.QtWidgets import QMessageBox, QWidget
 from client import ClientProgram
 from weather_forecast_gui import WeatherWindow
+
+PIC_PATH = os.path.join(Path(__file__).parent.absolute(),"pic")
 
 class LoginWindow(object):
 
@@ -18,7 +22,7 @@ class LoginWindow(object):
         self.background_image.setGeometry(QtCore.QRect(0, 0, 901, 501))
         self.background_image.setAutoFillBackground(False)
         self.background_image.setText("")
-        self.background_image.setPixmap(QtGui.QPixmap("pic/background-login.jpg"))
+        self.background_image.setPixmap(QtGui.QPixmap(os.path.join(PIC_PATH, "background-login.jpg")))
         self.background_image.setScaledContents(True)
         self.background_image.setObjectName("label")
         self.background_image.raise_()
@@ -30,7 +34,7 @@ class LoginWindow(object):
         self.login_window_image.setContextMenuPolicy(QtCore.Qt.NoContextMenu)
         self.login_window_image.setAutoFillBackground(False)
         self.login_window_image.setText("")
-        self.login_window_image.setPixmap(QtGui.QPixmap("pic/background_login_box.jpg"))
+        self.login_window_image.setPixmap(QtGui.QPixmap(os.path.join(PIC_PATH, "background_login_box.jpg"))
         self.login_window_image.setScaledContents(True)
         self.login_window_image.setObjectName("login_window_label")
         self.login_window_image.raise_()

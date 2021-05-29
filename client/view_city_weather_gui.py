@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
+import os.path
+from pathlib import Path
 from PySide2 import QtCore, QtGui, QtWidgets
+
+PIC_PATH = os.path.join(Path(__file__).parent.absolute(),"pic")
 
 class ViewCityWeather(object):
     def setupUI(self, MainWindow, data):
@@ -407,6 +411,13 @@ class ViewCityWeather(object):
         self.temperature5.show()
         self.temperature6.show()
         self.temperature7.show()
+        self.wind1.show()
+        self.wind2.show()
+        self.wind3.show()
+        self.wind4.show()
+        self.wind5.show()
+        self.wind6.show()
+        self.wind7.show()
         self.humidity1.show()
         self.humidity2.show()
         self.humidity3.show()
@@ -445,7 +456,7 @@ class ViewCityWeather(object):
 
         _translate = QtCore.QCoreApplication.translate
 
-        self.day1_pic.setPixmap(QtGui.QPixmap("pic/" + dataPic[0]))
+        self.day1_pic.setPixmap(QtGui.QPixmap(os.path.join(PIC_PATH, dataPic[0])))
         self.temperature1.setText(_translate("MainWindow", str(listvals[0][1]) + chr(176) + "C"))
         self.wind1.setText(_translate("MainWindow", "Wind: " + str(listvals[0][2])))
         self.humidity1.setText(_translate("MainWindow", "Humid: " + str(listvals[0][3])))

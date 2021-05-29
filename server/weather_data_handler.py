@@ -133,7 +133,7 @@ class City:
             date: (datetime.date):
                 a date object
         '''
-        self.date_weather.pop(date, None)
+        self.date_weather.pop(date)
 
     def FetchForecast(self, date:date):
         '''
@@ -381,8 +381,10 @@ class WeatherDataModifier(WeatherDataHandler):
         try:
             city = self.city_list[self.id_lookup[cityid]]
             city.RemoveForecast(date)
+            print(city.ToDict())
+            return True
         except:
-            return
+            return False
 
     def RemoveCity(self, cityid):
         '''
@@ -433,8 +435,7 @@ if __name__ == '__main__':
     from pathlib import Path
     JSON_PATH = os.path.join(Path(__file__).parent.absolute(),"data\\weather_data.json")
 
-    a = WeatherDataHandler(JSON_PATH)
+    a = WeatherDataModifier(JSON_PATH)
     a.LoadDatabase()
-    _, m = a.FetchForcastsByCity(32248)
-    for key, value in m[1].items():
-        print(key + ' - ' + str(value))
+    a.RemoveForecast(35687, date(2021,5,19))
+    a.SaveDatabase()

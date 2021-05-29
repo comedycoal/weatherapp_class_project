@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import datetime
+import os.path
+from pathlib import Path
 from PySide2 import QtCore, QtGui, QtWidgets
 from server import ServerProgram
+
+PIC_PATH = os.path.join(Path(__file__).parent.absolute(),"pic")
 
 class UpdateDatabase(object):
     def MainWindow(self):
@@ -60,7 +64,7 @@ class UpdateDatabase(object):
         self.wind_label.show()
         self.wind_box.show()
 
-    def insertDatabase(self, MainWindow, serverProgram):
+    def insertDatabase(self, MainWindow, serverProgram:ServerProgram):
         city_id = int(self.city_id_box.text())
         date = self.date_box.text()
         if date == 'today':
@@ -83,7 +87,7 @@ class UpdateDatabase(object):
         serverProgram.ExitEditModeAndReload(save= True)
         database = None
 
-    def onDeleteCity(self, MainWindow, serverProgram):
+    def onDeleteCity(self, MainWindow, serverProgram:ServerProgram):
         self.insert_database_button.hide()
         self.delete_city_button.hide()
         self.delete_date_button.hide()
@@ -112,7 +116,7 @@ class UpdateDatabase(object):
         self.update_database_button.show()
         self.return_button.show()
         
-    def deleteCity(self, MainWindow, serverProgram):
+    def deleteCity(self, MainWindow, serverProgram:ServerProgram):
         city_id = int(self.city_id_box.text())
         database = serverProgram.EnterEditMode()
         state = database.RemoveCity(cityid=city_id)
@@ -154,7 +158,7 @@ class UpdateDatabase(object):
         self.update_database_button.show()
         self.return_button.show()
         pass
-    def deleteDate(self, MainWindow, serverProgram):
+    def deleteDate(self, MainWindow, serverProgram:ServerProgram):
         city_id = int(self.city_id_box.text())
         date = self.date_box.text()
         if date == 'today':
@@ -168,7 +172,7 @@ class UpdateDatabase(object):
             QtWidgets.QMessageBox.about(MainWindow, "", "Xóa thành công")
         else:
             QtWidgets.QMessageBox.about(MainWindow, "", "Xóa thất bại")
-        serverProgram.ExitEditModeAndReload(save= True)
+        serverProgram.ExitEditModeAndReload(save=True)
         database = None
 
     def setupUI(self, MainWindow, serverProgram):
@@ -178,7 +182,7 @@ class UpdateDatabase(object):
         self.label = QtWidgets.QLabel(MainWindow)
         self.label.setGeometry(QtCore.QRect(0, 0, 671, 351))
         self.label.setText("")
-        self.label.setPixmap(QtGui.QPixmap("pic/sv.png"))
+        self.label.setPixmap(QtGui.QPixmap(os.path.join(PIC_PATH, "sv.png")))
         self.label.setScaledContents(True)
         self.label.setObjectName("label")
 
