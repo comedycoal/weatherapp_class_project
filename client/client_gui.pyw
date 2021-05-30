@@ -7,48 +7,63 @@ from PySide2.QtWidgets import QMessageBox, QWidget
 from client import ClientProgram
 from login_window_gui import LoginWindow
 
+class ClientWindow(QtWidgets.QWidget):
+    def __init__(self):
+        super().__init__()
+        self.clientProgram = ClientProgram()
+    
+    def closeEvent(self, event: QtGui.QCloseEvent) -> None:
+        close = QtWidgets.QMessageBox.question(self,
+                                     "Thoát",
+                                     ("Kết nối vẫn còn hiệu lực. " if self.clientProgram.connected else "") + "Bạn chắc chắn muốn thoát?",
+                                      QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+        if close == QtWidgets.QMessageBox.Yes:
+            event.accept()
+            if self.clientProgram.connected:
+                self.clientProgram.Disconnect()
+        else:
+            event.ignore()
 
 class ClientUI(object):
-
     def __init__(self):
-        self.clientProgram = ClientProgram()
-
-    def Connect(self, MainWindow):
+        self.MainWindow = ClientWindow()
+        
+    def Connect(self):
         ip = self.IP_box.text()
         port = int(self.port_box.text())
         
-        state = self.clientProgram.Connect(ip, port)
+        state = self.MainWindow.clientProgram.Connect(ip, port)
         if state:
-            QMessageBox.about(MainWindow, "", "Kết nối thành công")
+            QMessageBox.about(self.MainWindow, "", "Kết nối thành công")
             self.connect_button.hide()
             self.disconnect_button.show()
 
             login_window_ui = LoginWindow()
             self.loginWindow = QWidget()
-            login_window_ui.setupUI(self.loginWindow, self.clientProgram)
+            login_window_ui.setupUI(self.loginWindow, self.MainWindow.clientProgram)
             self.loginWindow.show()
         else:
-            QMessageBox.about(MainWindow, "", "Kết nối thất bại")
+            QMessageBox.about(self.MainWindow, "", "Kết nối thất bại")
     
     def Disconnect(self):
-        self.clientProgram.Disconnect()
+        self.MainWindow.clientProgram.Disconnect()
         self.disconnect_button.hide()
         self.connect_button.show()
 
-    def setupUI(self, MainWindow):
-        MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(282, 214)
+    def setupUI(self):
+        self.MainWindow.setObjectName("MainWindow")
+        self.MainWindow.resize(282, 214)
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "Client"))
+        self.MainWindow.setWindowTitle(_translate("MainWindow", "Client"))
 
-        self.background_image = QtWidgets.QLabel(MainWindow)
+        self.background_image = QtWidgets.QLabel(self.MainWindow)
         self.background_image.setGeometry(QtCore.QRect(0, 0, 281, 211))
         self.background_image.setStyleSheet("background-color: rgb(238, 255, 238);")
         self.background_image.setText("")
         self.background_image.setScaledContents(True)
         self.background_image.setObjectName("background_image")
 
-        self.IP_box = QtWidgets.QLineEdit(MainWindow)
+        self.IP_box = QtWidgets.QLineEdit(self.MainWindow)
         self.IP_box.setGeometry(QtCore.QRect(40, 90, 201, 41))
         font = QtGui.QFont()
         font.setFamily("Helvetica")
@@ -58,7 +73,7 @@ class ClientUI(object):
         self.IP_box.setObjectName("IP_box")
         self.IP_box.setText(_translate("MainWindow", "Nhập IP"))
 
-        self.port_box = QtWidgets.QLineEdit(MainWindow)
+        self.port_box = QtWidgets.QLineEdit(self.MainWindow)
         self.port_box.setGeometry(QtCore.QRect(40, 150, 101, 41))
         font = QtGui.QFont()
         font.setFamily("Helvetica")
@@ -68,7 +83,7 @@ class ClientUI(object):
         self.port_box.setObjectName("port_box")
         self.port_box.setText(_translate("MainWindow", "Nhập port"))
 
-        self.connect_button = QtWidgets.QPushButton(MainWindow, clicked = lambda:self.Connect(MainWindow))
+        self.connect_button = QtWidgets.QPushButton(self.MainWindow, clicked = lambda:self.Connect())
         self.connect_button.setGeometry(QtCore.QRect(160, 150, 81, 41))
         font = QtGui.QFont()
         font.setFamily("Helvetica")
@@ -80,7 +95,7 @@ class ClientUI(object):
         self.connect_button.setObjectName("connect_button")
         self.connect_button.setText(_translate("MainWindow", "Kết nối"))
 
-        self.disconnect_button = QtWidgets.QPushButton(MainWindow, clicked = lambda:self.Disconnect())
+        self.disconnect_button = QtWidgets.QPushButton(self.MainWindow, clicked = lambda:self.Disconnect())
         self.disconnect_button.setGeometry(QtCore.QRect(160, 150, 81, 41))
         font = QtGui.QFont()
         font.setFamily("Helvetica")
@@ -93,7 +108,7 @@ class ClientUI(object):
         self.disconnect_button.setText(_translate("MainWindow", "Ngắt"))
         self.disconnect_button.hide()
 
-        self.WELCOME_label = QtWidgets.QLabel(MainWindow)
+        self.WELCOME_label = QtWidgets.QLabel(self.MainWindow)
         self.WELCOME_label.setGeometry(QtCore.QRect(40, 20, 201, 51))
         font = QtGui.QFont()
         font.setFamily("Helvetica")
@@ -106,7 +121,7 @@ class ClientUI(object):
         self.WELCOME_label.setObjectName("WELCOME_label")
         self.WELCOME_label.setText(_translate("MainWindow", "WELCOME"))
         
-        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+        QtCore.QMetaObject.connectSlotsByName(self.MainWindow)
 
 
 if __name__ == "__main__":
@@ -121,8 +136,7 @@ if __name__ == "__main__":
     suppress_qt_warnings()
 
     app = QtWidgets.QApplication(sys.argv)
-    MainWindow = QtWidgets.QWidget()
     ui = ClientUI()
-    ui.setupUI(MainWindow)
-    MainWindow.show()
+    ui.setupUI()
+    ui.MainWindow.show()
     sys.exit(app.exec_())

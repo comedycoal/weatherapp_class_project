@@ -176,7 +176,7 @@ class WeatherWindow(object):
         city_name = data[0]
         weather_by_date_dict = data[1]
         print(weather_by_date_dict)
-        weather = ["Sunny", "Cloudy", "Sunny + Cloudy", "Rainy", "Stormy", "Lightning",]
+        weather = ["Sunny", "Cloudy", "Sunny + Cloudy", "Rainy", "Stormy", "Lightning"]
         weatherPic = ["Sunny.png", "Cloudy.png", "SunnyCloudy.png", "Rainy.png", "Stormy.png", "Lightning.png"]
         dataPic = []
 

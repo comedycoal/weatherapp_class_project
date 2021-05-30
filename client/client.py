@@ -107,9 +107,9 @@ class ClientProgram:
                 self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.sock.connect((host, port))
             self.requestID = 0
-            self.connected = True
             log.info(f"Connected to server at ({host}, {port})")
             self.listenThread = self.ListenForMessages()
+            self.connected = True
             return True
         except Exception as e:
             log.exception("Exception occured")
@@ -117,14 +117,15 @@ class ClientProgram:
             return False
 
     def Disconnect(self):
-        if not self.sock:
+        if not self.connected:
             return
+            
         self.sock.close()
         if self.listenThread:
             self.listenThread.join()
-        self.connected = False
         self.sock = None
         log.info("Socket closed. Connection to server has terminated")
+        self.connected = False
 
     def Run(self):
         listenThread = self.ListenForMessages()

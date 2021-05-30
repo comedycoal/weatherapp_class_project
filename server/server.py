@@ -16,7 +16,7 @@ from user_data_handler import UserDataHandler
 
 D_HOST = '0.0.0.0'
 D_PORT = 7878
-D_BACKLOG = 10
+D_BACKLOG = 1
 MAX_CLIENTS = 5
 FORMAT = 'utf-8'
 
@@ -290,6 +290,7 @@ class ServerProgram:
     
     def Run(self):
         '''
+        Depricated
         Console-based method to run the server object, mostly for debugging purposes
         '''
         # host = input("Host: ")
@@ -347,7 +348,7 @@ class ServerProgram:
             return
             
         self.serverDisconnectionEvent.set()
-        self.serverSocket.close()
+        self.serverSocket = None
         log.info(f"Server has issued disconnection to all clients")
 
         for connection in self.clients:
@@ -359,7 +360,8 @@ class ServerProgram:
             self.connectionThread.join()
         if self.processthread:
             self.processthread.join()
-        self.connectionThread = self.processthread = None
+        self.connectionThread = None
+        self.processthread = None
         log.info(f"All client handlers has terminated")
         self.started = False
 
@@ -402,30 +404,45 @@ class ServerProgram:
             backlog (int): backlog number
         '''
         #Obligatory binding and listen
-        self.serverSocket.bind((host, port))
-        self.serverSocket.listen(backlog)
 
-        log.info(f"Server socket opened at ({host}, {port})")
-        while self.clients.count((None, None)) > 0:
-            try:
-                clientSocket, address = self.serverSocket.accept()
-            except:
+
+        log.info(f"Server socket opened at ({host}, {port}) for {self.maxClients} clients")
+        while True:
+            if self.serverDisconnectionEvent.is_set():
                 break
 
-            with self.clientListLock:
-                for i in range(len(self.clients)):
-                    if self.clients[i] == (None, None):
-                        handler = MessagingHandler(i, clientSocket, address)
-                        thread = handler.ListenForRequests()
-                        log.info(f"{address} connected. Opened new thread {thread} to listen to their requests")
+            while self.clients.count((None, None)) > 0:
+                if not self.serverSocket:
+                    self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    self.serverSocket.bind((host, port))
+                    self.serverSocket.listen(backlog)
 
-                        self.clients[i] = (thread, handler)
-                        break
+                try:
+                    clientSocket, address = self.serverSocket.accept()
+                except:
+                    break
 
-            log.info(f"Server program has opened {self.maxClients - self.clients.count((None, None))} sockets")
+                with self.clientListLock:
+                    for i in range(len(self.clients)):
+                        if self.clients[i] == (None, None):
+                            handler = MessagingHandler(i, clientSocket, address)
+                            thread = handler.ListenForRequests()
+                            log.info(f"{address} connected. Opened new thread {thread} to listen to their requests")
+
+                            self.clients[i] = (thread, handler)
+                            break
+
+                log.info(f"Server program has opened {self.maxClients - self.clients.count((None, None))} sockets. {self.clients.count((None, None))} remaining")
+            
+            if self.serverSocket:
+                self.serverSocket.close()
+                self.serverSocket = None
 
         # Wait how do we stop connections if accept() just... blocks?
         log.info(f"Server connection thread has terminated")
+        if self.serverSocket:
+            self.serverSocket.close()
+            self.serverSocket = None
 
     @threaded
     def ProcessRequestQueue(self):
@@ -440,7 +457,7 @@ class ServerProgram:
                 if reply and self.clients[id][0].is_alive():
                     log.info(f"Letting client {id}'s handler replying to their client. Reply is {reply}")
                     self.clients[id][1].SendMessage(reply, reqID)
-                else:
+                elif not reply:
                     self.clients[id] = (None, None)
                     log.info(f"Removed client {id}'s handler from client list")
 

@@ -31,8 +31,17 @@ class ServerGUI:
         
     def openServer(self):
         host = self.host_box.text()
-        max_client = int(self.num_client_box.text())
-        self.MainWindow.serverProgram.Start(host=host, num_clients=max_client)
+        try:
+            port = int(self.port_box.text())
+        except:
+            port = 7878
+
+        try:
+            max_client = int(self.num_client_box.text())
+        except:
+            max_client = 7878
+        
+        self.MainWindow.serverProgram.Start(host=host, port=port, num_clients=max_client)
         QtWidgets.QMessageBox.about(self.MainWindow, "", "Mở server thành công")
 
     def closeServer(self):
