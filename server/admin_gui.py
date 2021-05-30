@@ -19,7 +19,7 @@ class AdminProgram():
         password = self.password_box.text()
 
         if not serverProgram.userDataHandler.VerifyAdmin(username, password):
-            QtWidgets.QMessageBox.about(MainWindow, "" , "Đăng nhập thất bại")
+            QtWidgets.QMessageBox.about(MainWindow, "Đăng nhập thất bại" , "username/password: admin/admin")
         else:
             updateDatabase = UpdateDatabase()
             updateDatabase_Window = QtWidgets.QWidget()

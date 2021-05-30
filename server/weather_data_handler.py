@@ -118,7 +118,7 @@ class City:
                 if errorOnDuplicate:
                     raise AssertionError('Duplicate exists for parameter date')
                 if not override:
-                    return True
+                    return False
                     
             self.date_weather[date] = dateWeatherForecast
             return True
@@ -344,13 +344,15 @@ class WeatherDataModifier(WeatherDataHandler):
         '''
         try:
             city = self.city_list[self.id_lookup[cityid]]
-            city.AddForecast(date, forecast, errorOnDuplicate=True)
+            city.AddForecast(date, forecast, errorOnDuplicate=False, override=True)
             return True
         except KeyError as e:
             print('City does not exists')
             return False
         except AssertionError as e:
             print(e)
+            return False
+        except Exception as e:
             return False
 
     def AddForcastByValues(self, cityid, date:date, weatherInfoTuple):
@@ -368,7 +370,7 @@ class WeatherDataModifier(WeatherDataHandler):
         try:
             forecast = Forecast(weatherInfoTuple)
             return self.AddForecastForCity(cityid, date, forecast)
-        except ValueError as e:
+        except Exception as e:
             return False
 
     def RemoveForecast(self, cityid, date:date):
@@ -428,7 +430,7 @@ class WeatherDataModifier(WeatherDataHandler):
             except:
                 return res
 
-        raise RuntimeError('Cannot assign an id. The number of city reached maximal amount')
+        raise RuntimeError('Cannot assign an id. The number of city reached maximal.')
 
 
 if __name__ == '__main__':
@@ -436,6 +438,7 @@ if __name__ == '__main__':
     JSON_PATH = os.path.join(Path(__file__).parent.absolute(),"data\\weather_data.json")
 
     a = WeatherDataModifier(JSON_PATH)
+    f = Forecast(('sunny', 32.3, 0.45, 29.3))
     a.LoadDatabase()
-    a.RemoveForecast(35687, date(2021,5,19))
+    a.AddForecastForCity(35687, date(2021,5,19), f)
     a.SaveDatabase()

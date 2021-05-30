@@ -33,11 +33,11 @@ class ServerGUI:
         host = self.host_box.text()
         max_client = int(self.num_client_box.text())
         self.MainWindow.serverProgram.Start(host=host, num_clients=max_client)
-        QtWidgets.QMessageBox.about(self.MainWindow, "", "Kết nối thành công")
+        QtWidgets.QMessageBox.about(self.MainWindow, "", "Mở server thành công")
 
     def closeServer(self):
         self.MainWindow.serverProgram.End()
-        QtWidgets.QMessageBox.about(self.MainWindow, "", "Ngắt kết nối thành công")
+        QtWidgets.QMessageBox.about(self.MainWindow, "", "Đóng server thành công")
 
     def updateDatabase(self):
         adminProgram = AdminProgram()

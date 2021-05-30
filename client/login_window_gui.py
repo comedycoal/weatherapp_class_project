@@ -34,7 +34,7 @@ class LoginWindow(object):
         self.login_window_image.setContextMenuPolicy(QtCore.Qt.NoContextMenu)
         self.login_window_image.setAutoFillBackground(False)
         self.login_window_image.setText("")
-        self.login_window_image.setPixmap(QtGui.QPixmap(os.path.join(PIC_PATH, "background_login_box.jpg"))
+        self.login_window_image.setPixmap(QtGui.QPixmap(os.path.join(PIC_PATH, "background_login_box.jpg")))
         self.login_window_image.setScaledContents(True)
         self.login_window_image.setObjectName("login_window_label")
         self.login_window_image.raise_()

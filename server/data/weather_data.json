@@ -100,5 +100,74 @@
 				}
 			}
 		]
+	},
+	{
+		"city_id": 32248,
+		"city_name": "Ho Chi Minh",
+		"date_weather": [
+			{
+				"date": "2021/05/30",
+				"info": {
+					"weather": "Sunny",
+					"temperature": 35,
+					"humidity": 0.34,
+					"wind_speed": 35.4
+				}
+			},
+			{
+				"date": "2021/05/31",
+				"info": {
+					"weather": "Rainy",
+					"temperature": 25,
+					"humidity": 0.76,
+					"wind_speed": 40.3
+				}
+			},
+			{
+				"date": "2021/06/01",
+				"info": {
+					"weather": "Cloudy",
+					"temperature": 32,
+					"humidity": 0.45,
+					"wind_speed": 33.2
+				}
+			},
+			{
+				"date": "2021/06/02",
+				"info": {
+					"weather": "Stormy",
+					"temperature": 24,
+					"humidity": 0.87,
+					"wind_speed": 78.3
+				}
+			},
+			{
+				"date": "2021/06/03",
+				"info": {
+					"weather": "Lightning",
+					"temperature": 23,
+					"humidity": 0.67,
+					"wind_speed": 45.6
+				}
+			},
+			{
+				"date": "2021/06/04",
+				"info": {
+					"weather": "Sunny + Cloudy",
+					"temperature": 25,
+					"humidity": 0.75,
+					"wind_speed": 35.4
+				}
+			},
+			{
+				"date": "2021/06/05",
+				"info": {
+					"weather": "Sunny",
+					"temperature": 34,
+					"humidity": 0.54,
+					"wind_speed": 12.3
+				}
+			}
+		]
 	}
 ]
