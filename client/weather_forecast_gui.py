@@ -9,7 +9,6 @@ from client import ClientProgram
 PIC_PATH = os.path.join(Path(__file__).parent.absolute(),"pic")
 
 class WeatherWindow(object):
-
     def onLogout(self, MainWindow):
         MainWindow.setWindowTitle("Login")
         self.logout_button.hide()
@@ -184,12 +183,13 @@ class WeatherWindow(object):
         listkeys = sorted(weather_by_date_dict)
         listvals = [weather_by_date_dict[x] for x in listkeys]
         for item in listvals:
-            if not item[0]:
-                dataPic.append('ukn.png')
             for i in range(6):
                 if item[0] == weather[i]:
                     dataPic.append(weatherPic[i])
                     break
+            else:
+                dataPic.append('ukn.png')
+            
 
         _translate = QtCore.QCoreApplication.translate
 
@@ -238,11 +238,6 @@ class WeatherWindow(object):
     def viewCity(self, MainWindow, data):
         # viewCityWeather = ViewCityWeather()
         # viewCityWeather.setupUI(MainWindow, data)
-        self.weather_layout_background = QtWidgets.QLabel(MainWindow)
-        self.weather_layout_background.setGeometry(QtCore.QRect(30, 200, 841, 261))
-        self.weather_layout_background.setStyleSheet("background-color: rgb(0, 0, 127)")
-        self.weather_layout_background.setText("")
-        self.weather_layout_background.setObjectName("weather_layout_background")
 
         self.day1_pic = QtWidgets.QLabel(MainWindow)
         self.day1_pic.setGeometry(QtCore.QRect(40, 210, 101, 81))
@@ -878,6 +873,12 @@ class WeatherWindow(object):
         item.setText(_translate("MainWindow", "Wind Speed"))
         self.date_table.setSortingEnabled(__sortingEnabled)
         self.date_table.hide()
+
+        self.weather_layout_background = QtWidgets.QLabel(MainWindow)
+        self.weather_layout_background.setGeometry(QtCore.QRect(30, 200, 841, 261))
+        self.weather_layout_background.setStyleSheet("background-color: rgb(0, 0, 127)")
+        self.weather_layout_background.setText("")
+        self.weather_layout_background.setObjectName("weather_layout_background")
 
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
