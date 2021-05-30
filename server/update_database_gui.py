@@ -245,7 +245,7 @@ class UpdateDatabase(object):
         if date == 'today':
             date = datetime.date.today()
         else:
-            date = datetime.datetime.strptime(date, '%Y/%m/%d')
+            date = datetime.datetime.strptime(date, '%Y/%m/%d').date()
         weather = str(self.weather_box.currentText())
         temperature = float(self.temperature_box.text())
         humidity = float(self.humid_box.text())
@@ -318,7 +318,7 @@ class UpdateDatabase(object):
             try:
                 city_id = int(self.city_id_box.text())
                 date_text = self.weather_table.item(i+1, 0).text()
-                date = datetime.datetime.strptime(date_text, '%Y/%m/%d')
+                date = datetime.datetime.strptime(date_text, '%Y/%m/%d').date()
                 weather = str(self.weather_table.cellWidget(i+1, 1).currentText())
                 temperature = float(self.weather_table.item(i+1, 2).text())
                 humidity = float(self.weather_table.item(i+1, 3).text())

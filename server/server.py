@@ -7,6 +7,7 @@ import logging
 import socket
 import queue
 import json
+import sys
 import os
 from pathlib import Path
 from enum import Enum
@@ -23,10 +24,16 @@ FORMAT = 'utf-8'
 HEADER_LENGTH = 8
 ID_LENGTH = 4
 
-WEATHER_DATA_PATH = os.path.join(Path(__file__).parent.absolute(),"data\\weather_data.json")
-USER_DATA_PATH = os.path.join(Path(__file__).parent.absolute(),"data\\user_data.json")
+isbundled = getattr(sys, 'frozen', False) and hasattr(sys,'_MEIPASS')
 
-LOG_PATH = os.path.join(Path(__file__).parent.absolute(),"server.log")
+WEATHER_DATA_PATH = os.path.join(Path(__file__).parent.absolute() if not isbundled else os.path.dirname(sys.executable) ,"data\\weather_data.json")
+USER_DATA_PATH = os.path.join(Path(__file__).parent.absolute() if not isbundled else os.path.dirname(sys.executable),"data\\user_data.json")
+
+LOG_PATH = os.path.join(Path(__file__).parent.absolute() if not isbundled else os.path.dirname(sys.executable),"server.log")
+
+print(sys.executable)
+print(WEATHER_DATA_PATH)
+print(USER_DATA_PATH)
 
 #-------------------- Set-up for logger --------------------#
 log = logging.getLogger(__name__)
@@ -37,6 +44,7 @@ c_formatter = logging.Formatter(fmt="[%(levelname)s] %(message)s", datefmt="")
 f_handler = logging.FileHandler(filename=LOG_PATH, mode='w+')
 f_handler.setLevel(logging.DEBUG)
 f_handler.setFormatter(f_formatter)
+
 
 # c_handler = logging.StreamHandler()
 # c_handler.setLevel(logging.WARNING)

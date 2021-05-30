@@ -453,5 +453,5 @@ if __name__ == '__main__':
 
     a = WeatherDataModifier(JSON_PATH)
     a.LoadDatabase()
-    print(a.FetchForcastsByCity(8548,fromDate=date(2021,5,30)))
+    a.AddForecastByValues(8548, date(2021,5,30), ("Sunny", 99,0.99,99))
     a.SaveDatabase()

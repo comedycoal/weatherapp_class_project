@@ -6,10 +6,10 @@
 			{
 				"date": "2021/05/30",
 				"info": {
-					"weather": "Rainy",
-					"temperature": 33.0,
-					"humidity": 0.8,
-					"wind_speed": 11.0
+					"weather": "Sunny + Cloudy",
+					"temperature": 99999.0,
+					"humidity": 0.99,
+					"wind_speed": 99.0
 				}
 			},
 			{
@@ -271,6 +271,21 @@
 					"temperature": 33.0,
 					"humidity": 0.75,
 					"wind_speed": 16.0
+				}
+			}
+		]
+	},
+	{
+		"city_id": 36332,
+		"city_name": "Hue",
+		"date_weather": [
+			{
+				"date": "2021/05/30",
+				"info": {
+					"weather": "Cloudy",
+					"temperature": 30.0,
+					"humidity": 0.7,
+					"wind_speed": 99.5
 				}
 			}
 		]

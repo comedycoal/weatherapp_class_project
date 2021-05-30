@@ -8,6 +8,7 @@ import socket
 import queue
 import json
 import time
+import sys
 import os
 from pathlib import Path
 from enum import Enum
@@ -19,7 +20,9 @@ FORMAT = 'utf-8'
 HEADER_LENGTH = 8
 ID_LENGTH = 4
 
-LOG_PATH = os.path.join(Path(__file__).parent.absolute(),"client.log")
+isbundled = getattr(sys, 'frozen', False) and hasattr(sys,'_MEIPASS')
+
+LOG_PATH = os.path.join(Path(__file__).parent.absolute() if not isbundled else os.path.dirname(sys.executable), "client.log")
 
 #-------------------- Set-up for logger --------------------#
 log = logging.getLogger(__name__)
