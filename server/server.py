@@ -26,14 +26,17 @@ ID_LENGTH = 4
 
 isbundled = getattr(sys, 'frozen', False) and hasattr(sys,'_MEIPASS')
 
-WEATHER_DATA_PATH = os.path.join(Path(__file__).parent.absolute() if not isbundled else os.path.dirname(sys.executable) ,"data\\weather_data.json")
-USER_DATA_PATH = os.path.join(Path(__file__).parent.absolute() if not isbundled else os.path.dirname(sys.executable),"data\\user_data.json")
+EXE_PATH = os.path.join(Path(__file__).parent.absolute() if not isbundled else os.path.dirname(sys.executable))
 
-LOG_PATH = os.path.join(Path(__file__).parent.absolute() if not isbundled else os.path.dirname(sys.executable),"server.log")
+try:
+    os.mkdir(os.path.join(EXE_PATH, "data"))
+except:
+    pass
 
-print(sys.executable)
-print(WEATHER_DATA_PATH)
-print(USER_DATA_PATH)
+WEATHER_DATA_PATH = os.path.join(EXE_PATH,"data\\weather_data.json")
+USER_DATA_PATH = os.path.join(EXE_PATH,"data\\user_data.json")
+
+LOG_PATH = os.path.join(EXE_PATH,"server.log")
 
 #-------------------- Set-up for logger --------------------#
 log = logging.getLogger(__name__)
