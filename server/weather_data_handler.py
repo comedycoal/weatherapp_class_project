@@ -20,9 +20,10 @@ class Forecast:
         Raises:
             ValueError: when a weatherInfo value is not in appropriate range
         '''
-        self.weather = weatherInfo[0]
-        self.temperature = weatherInfo[1]
         try:
+            assert weatherInfo[0] in ["Sunny", "Cloudy", "Sunny + Cloudy", "Rainy", "Stormy", "Lightning"], "Invalid weather type"
+            self.weather = weatherInfo[0]
+            self.temperature = weatherInfo[1]
             assert weatherInfo[2] >= 0 and weatherInfo[2] <= 1, "Wrong humidity value"
             self.humidity = weatherInfo[2]
             assert weatherInfo[3] >= 0
