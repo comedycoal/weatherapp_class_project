@@ -12,6 +12,7 @@ class UpdateDatabase(object):
     def MainWindow(self):
         self.label.show()
         self.WELCOME_label.show()
+        self.function_label.setText("Chọn chức năng")
         self.function_label.show()
         self.insert_database_button.show()
         self.delete_city_button.show()
@@ -116,6 +117,7 @@ class UpdateDatabase(object):
             self.city_name_label.show()
             self.city_name_box.setText(city[0])
             self.city_name_box.show()
+            self.return_choose_function_button.hide()
 
             self.chooseFunction()
 
@@ -131,10 +133,11 @@ class UpdateDatabase(object):
         else:
             self.city_id_box.setText(str(city_id))
             self.add_city_button.hide()
+            self.return_choose_function_button.hide()
             self.chooseFunction()
 
     def chooseFunction(self):
-        self.return_choose_function_button.show()
+        # self.return_choose_function_button.show()
         self.insert_one_day_button.show()
         self.insert_seven_days_button.show()
 
@@ -155,6 +158,7 @@ class UpdateDatabase(object):
         self.humid_box.show()
         self.wind_label.show()
         self.wind_box.show()
+        self.return_choose_function_button.show()
 
         self.add_city_button.hide()
         self.city_name_label.hide()
@@ -171,6 +175,7 @@ class UpdateDatabase(object):
         self.date_label.show()
         self.date_box.setGeometry(QtCore.QRect(470, 150, 151, 31))
         self.date_box.show()
+        self.return_choose_function_button.show()
 
         self.update_database_button.hide()
         self.add_city_button.hide()
@@ -391,7 +396,7 @@ class UpdateDatabase(object):
         self.delete_date_button.setObjectName("delete_date_button")
 
         self.update_database_button = QtWidgets.QPushButton(MainWindow)
-        self.update_database_button.setGeometry(QtCore.QRect(290, 300, 93, 31))
+        self.update_database_button.setGeometry(QtCore.QRect(290, 305, 93, 31))
         font = QtGui.QFont()
         font.setFamily("Helvetica")
         font.setPointSize(10)
@@ -640,23 +645,34 @@ class UpdateDatabase(object):
         self.insert_seven_days_button.setText("Thêm/Sửa thông tin\nbảy ngày liên tiếp")
 
         self.weather_table = QtWidgets.QTableWidget(MainWindow)
-        self.weather_table.setGeometry(QtCore.QRect(40, 190, 590, 101))
+        self.weather_table.setGeometry(QtCore.QRect(40, 186, 590, 116))
         self.weather_table.setMinimumSize(QtCore.QSize(590, 0))
         font = QtGui.QFont()
         font.setFamily("Helvetica")
-        font.setPointSize(10)
+        font.setPointSize(7)
         self.weather_table.setFont(font)
         self.weather_table.setRowCount(8)
         self.weather_table.setColumnCount(5)
         self.weather_table.setObjectName("weather_table")
+        
         for i in range(8):
             for j in range(5):
                 item = QtWidgets.QTableWidgetItem()
                 item.setTextAlignment(QtCore.Qt.AlignCenter)
                 font = QtGui.QFont()
                 font.setFamily("Helvetica")
+                font.setPointSize(7)
                 item.setFont(font)
                 self.weather_table.setItem(i, j, item)
+        for i in range(7):
+            weatherBox = QtWidgets.QComboBox(self.weather_table)
+            weatherBox.setFont(font)
+            weatherBox.setMaxVisibleItems(3)
+            weatherBox.setObjectName("weather_box")
+            weatherBox.addItems(["Sunny", "Cloudy", "Sunny + Cloudy", "Rainy", "Stormy", "Lightning"])
+            weatherBox.setCurrentIndex(0)
+            weatherBox.setStyleSheet("background-color: rgb(255, 255, 255);")
+            self.weather_table.setCellWidget(i+1, 1, weatherBox)
 
         self.weather_table.horizontalHeader().setVisible(False)
         self.weather_table.horizontalHeader().setCascadingSectionResizes(True)
@@ -668,11 +684,13 @@ class UpdateDatabase(object):
         self.weather_table.verticalHeader().setMinimumSectionSize(30)
         self.weather_table.verticalHeader().setSortIndicatorShown(False)
         self.weather_table.verticalHeader().setStretchLastSection(False)
-        self.weather_table.setColumnWidth(0, 120)
-        self.weather_table.setColumnWidth(1, 100)
+        self.weather_table.setColumnWidth(0, 100)
+        self.weather_table.setColumnWidth(1, 120)
         self.weather_table.setColumnWidth(2, 130)
         self.weather_table.setColumnWidth(3, 90)
         self.weather_table.setColumnWidth(4, 90)
+        for i in range(8):
+            self.weather_table.setRowHeight(i, 3)
         __sortingEnabled = self.weather_table.isSortingEnabled()
         self.weather_table.setSortingEnabled(False)
         item = self.weather_table.item(0, 0)
@@ -686,6 +704,7 @@ class UpdateDatabase(object):
         item = self.weather_table.item(0, 4)
         item.setText(_translate("MainWindow", "Wind Speed"))
         self.weather_table.setSortingEnabled(__sortingEnabled)
+        self.weather_table.resizeRowsToContents()
 
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
         self.MainWindow()

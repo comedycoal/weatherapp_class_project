@@ -176,7 +176,7 @@ class WeatherWindow(object):
         city_name = data[0]
         weather_by_date_dict = data[1]
         print(weather_by_date_dict)
-        weather = ["Sunny", "Cloudy", "Sunny + Cloudy", "Rainy", "Stormy", "Lightning"]
+        weather = ["Sunny", "Cloudy", "Sunny + Cloudy", "Rainy", "Stormy", "Lightning",]
         weatherPic = ["Sunny.png", "Cloudy.png", "SunnyCloudy.png", "Rainy.png", "Stormy.png", "Lightning.png"]
         dataPic = []
 
@@ -238,11 +238,6 @@ class WeatherWindow(object):
     def viewCity(self, MainWindow, data):
         # viewCityWeather = ViewCityWeather()
         # viewCityWeather.setupUI(MainWindow, data)
-        self.weather_layout_background = QtWidgets.QLabel(MainWindow)
-        self.weather_layout_background.setGeometry(QtCore.QRect(30, 200, 841, 261))
-        self.weather_layout_background.setStyleSheet("background-color: rgb(0, 0, 127)")
-        self.weather_layout_background.setText("")
-        self.weather_layout_background.setObjectName("weather_layout_background")
 
         self.day1_pic = QtWidgets.QLabel(MainWindow)
         self.day1_pic.setGeometry(QtCore.QRect(40, 210, 101, 81))
@@ -878,6 +873,12 @@ class WeatherWindow(object):
         item.setText(_translate("MainWindow", "Wind Speed"))
         self.date_table.setSortingEnabled(__sortingEnabled)
         self.date_table.hide()
+
+        self.weather_layout_background = QtWidgets.QLabel(MainWindow)
+        self.weather_layout_background.setGeometry(QtCore.QRect(30, 200, 841, 261))
+        self.weather_layout_background.setStyleSheet("background-color: rgb(0, 0, 127)")
+        self.weather_layout_background.setText("")
+        self.weather_layout_background.setObjectName("weather_layout_background")
 
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 

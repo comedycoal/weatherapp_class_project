@@ -169,5 +169,10 @@
 				}
 			}
 		]
+	},
+	{
+		"city_id": 8548,
+		"city_name": "Vung Tau",
+		"date_weather": []
 	}
 ]
