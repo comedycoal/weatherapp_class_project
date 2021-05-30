@@ -21,10 +21,9 @@ class AdminProgram():
         if not serverProgram.userDataHandler.VerifyAdmin(username, password):
             QtWidgets.QMessageBox.about(MainWindow, "Đăng nhập thất bại" , "username/password: admin/admin")
         else:
-            updateDatabase = UpdateDatabase()
-            updateDatabase_Window = QtWidgets.QWidget()
-            updateDatabase.setupUI(updateDatabase_Window, serverProgram)
-            updateDatabase_Window.show()
+            updateDatabase = UpdateDatabase(serverProgram)
+            updateDatabase.setupUI()
+            updateDatabase.MainWindow.show()
             # Create a window allow admin update weather data
 
     def setupUI(self, MainWindow, serverProgram):

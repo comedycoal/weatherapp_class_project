@@ -270,6 +270,7 @@ class ServerProgram:
             RuntimeError: raised when the underlying weather or user databases is inaccessible or lacking.
         '''
         self.started = False
+        self.editing = False
         self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.weatherDataHandler = WeatherDataHandler(WEATHER_DATA_PATH)
         self.userDataHandler = UserDataHandler(USER_DATA_PATH)
@@ -331,6 +332,7 @@ class ServerProgram:
         if self.started:
             return
 
+        self.serverDisconnectionEvent.clear()
         self.maxClients = num_clients
         self.clients = [(None, None) for _ in range(self.maxClients)]
         self.connectionThread = self.OpenServer(host, port, backlog)
@@ -348,6 +350,7 @@ class ServerProgram:
             return
             
         self.serverDisconnectionEvent.set()
+        self.serverSocket.close()
         self.serverSocket = None
         log.info(f"Server has issued disconnection to all clients")
 
@@ -374,8 +377,11 @@ class ServerProgram:
         Returns:
             adminWeatherHandler (WeatherDataModifier)
         '''
-        self.adminWeatherHandler = WeatherDataModifier(WEATHER_DATA_PATH)
-        self.adminWeatherHandler.LoadDatabase()
+        if not self.editing:
+            self.adminWeatherHandler = WeatherDataModifier(WEATHER_DATA_PATH)
+            self.adminWeatherHandler.LoadDatabase()
+            self.editing = True
+            
         return self.adminWeatherHandler
 
     def ExitEditModeAndReload(self, save=True):
@@ -385,13 +391,27 @@ class ServerProgram:
             save (bool):
                 Dictates whether edits are saved or not
         '''
-        if save:
-            self.adminWeatherHandler.SaveDatabase()
+        if self.editing: 
+            if save:
+                self.adminWeatherHandler.SaveDatabase()
 
-        self.adminWeatherHandler = None
-        
-        with self.weatherDatabaseLock:
-            self.weatherDataHandler.LoadDatabase()
+            self.adminWeatherHandler = None
+            
+            with self.weatherDatabaseLock:
+                self.weatherDataHandler.LoadDatabase()
+
+            self.editing = False
+
+    def IsWeatherDataChangedSinceLoaded(self):
+        '''
+        Queries whether the weather database has received a change since the last time it's loaded in edit mode
+
+        Returns:
+            status (bool):
+                True if at least one meaningful change is made
+                False if the program is not in edit mode, or no changes has been made
+        '''
+        return self.adminWeatherHandler and self.adminWeatherHandler.changed
         
     @threaded_daemon
     def OpenServer(self, host=D_HOST, port=D_PORT, backlog=D_BACKLOG):

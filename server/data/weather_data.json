@@ -1,102 +1,69 @@
 [
 	{
-		"city_id": 35687,
-		"city_name": "Da Nang",
+		"city_id": 8548,
+		"city_name": "Vung Tau",
 		"date_weather": [
 			{
-				"date": "2021/05/19",
-				"info": {
-					"weather": "Sunny",
-					"temperature": 30,
-					"humidity": 0.6,
-					"wind_speed": 27.54
-				}
-			},
-			{
-				"date": "2021/05/20",
+				"date": "2021/05/30",
 				"info": {
 					"weather": "Rainy",
-					"temperature": 26,
-					"humidity": 0.9,
-					"wind_speed": 37.54
+					"temperature": 33.0,
+					"humidity": 0.8,
+					"wind_speed": 11.0
 				}
 			},
 			{
-				"date": "2021/05/28",
-				"info": {
-					"weather": "Stormy",
-					"temperature": 25,
-					"humidity": 0.7,
-					"wind_speed": 24.5
-				}
-			},
-			{
-				"date": "2021/05/29",
+				"date": "2021/05/31",
 				"info": {
 					"weather": "Sunny",
-					"temperature": 31,
-					"humidity": 0.5,
+					"temperature": 33.0,
+					"humidity": 0.74,
 					"wind_speed": 13.0
 				}
 			},
 			{
 				"date": "2021/06/01",
 				"info": {
-					"weather": "Rainy",
-					"temperature": 27,
-					"humidity": 0.86,
-					"wind_speed": 12.0
-				}
-			}
-		]
-	},
-	{
-		"city_id": 42361,
-		"city_name": "Ha Noi",
-		"date_weather": [
-			{
-				"date": "2021/05/19",
-				"info": {
-					"weather": "Rainy",
-					"temperature": 25,
-					"humidity": 0.78,
-					"wind_speed": 18.1
-				}
-			},
-			{
-				"date": "2021/06/01",
-				"info": {
-					"weather": "Rainy",
-					"temperature": 26,
-					"humidity": 0.8,
-					"wind_speed": 24.3
+					"weather": "Sunny",
+					"temperature": 33.0,
+					"humidity": 0.74,
+					"wind_speed": 11.0
 				}
 			},
 			{
 				"date": "2021/06/02",
 				"info": {
-					"weather": "Stormy",
-					"temperature": 27,
-					"humidity": 0.87,
-					"wind_speed": 33.2
+					"weather": "Sunny",
+					"temperature": 33.0,
+					"humidity": 0.75,
+					"wind_speed": 11.0
 				}
 			},
 			{
 				"date": "2021/06/03",
 				"info": {
-					"weather": "Stormy",
-					"temperature": 26,
-					"humidity": 0.98,
-					"wind_speed": 10.5
+					"weather": "Sunny",
+					"temperature": 32.0,
+					"humidity": 0.75,
+					"wind_speed": 13.0
 				}
 			},
 			{
 				"date": "2021/06/04",
 				"info": {
-					"weather": "Cloudy",
-					"temperature": 25,
-					"humidity": 0.76,
-					"wind_speed": 18.9
+					"weather": "Sunny",
+					"temperature": 33.0,
+					"humidity": 0.72,
+					"wind_speed": 16.0
+				}
+			},
+			{
+				"date": "2021/06/05",
+				"info": {
+					"weather": "Sunny",
+					"temperature": 32.0,
+					"humidity": 0.75,
+					"wind_speed": 16.0
 				}
 			}
 		]
@@ -108,71 +75,204 @@
 			{
 				"date": "2021/05/30",
 				"info": {
-					"weather": "Sunny",
-					"temperature": 35,
-					"humidity": 0.34,
-					"wind_speed": 35.4
+					"weather": "Sunny + Cloudy",
+					"temperature": 34.0,
+					"humidity": 0.73,
+					"wind_speed": 11.0
 				}
 			},
 			{
 				"date": "2021/05/31",
 				"info": {
 					"weather": "Rainy",
-					"temperature": 25,
-					"humidity": 0.76,
-					"wind_speed": 40.3
+					"temperature": 34.0,
+					"humidity": 0.68,
+					"wind_speed": 11.0
 				}
 			},
 			{
 				"date": "2021/06/01",
 				"info": {
-					"weather": "Cloudy",
-					"temperature": 32,
-					"humidity": 0.45,
-					"wind_speed": 33.2
+					"weather": "Rainy",
+					"temperature": 34.0,
+					"humidity": 0.69,
+					"wind_speed": 11.0
 				}
 			},
 			{
 				"date": "2021/06/02",
 				"info": {
-					"weather": "Stormy",
-					"temperature": 24,
-					"humidity": 0.87,
-					"wind_speed": 78.3
+					"weather": "Lightning",
+					"temperature": 34.0,
+					"humidity": 0.71,
+					"wind_speed": 10.0
 				}
 			},
 			{
 				"date": "2021/06/03",
 				"info": {
-					"weather": "Lightning",
-					"temperature": 23,
-					"humidity": 0.67,
-					"wind_speed": 45.6
+					"weather": "Rainy",
+					"temperature": 33.0,
+					"humidity": 0.7,
+					"wind_speed": 11.0
 				}
 			},
 			{
 				"date": "2021/06/04",
 				"info": {
-					"weather": "Sunny + Cloudy",
-					"temperature": 25,
-					"humidity": 0.75,
-					"wind_speed": 35.4
+					"weather": "Rainy",
+					"temperature": 34.0,
+					"humidity": 0.69,
+					"wind_speed": 14.0
 				}
 			},
 			{
 				"date": "2021/06/05",
 				"info": {
-					"weather": "Sunny",
-					"temperature": 34,
-					"humidity": 0.54,
-					"wind_speed": 12.3
+					"weather": "Lightning",
+					"temperature": 34.0,
+					"humidity": 0.7,
+					"wind_speed": 18.0
 				}
 			}
 		]
 	},
 	{
-		"city_id": 8548,
-		"city_name": "Vung Tau",
-		"date_weather": []
+		"city_id": 41348,
+		"city_name": "Da Lat",
+		"date_weather": [
+			{
+				"date": "2021/05/30",
+				"info": {
+					"weather": "Sunny + Cloudy",
+					"temperature": 19.0,
+					"humidity": 0.89,
+					"wind_speed": 2.0
+				}
+			},
+			{
+				"date": "2021/05/31",
+				"info": {
+					"weather": "Rainy",
+					"temperature": 26.0,
+					"humidity": 0.76,
+					"wind_speed": 8.0
+				}
+			},
+			{
+				"date": "2021/06/01",
+				"info": {
+					"weather": "Stormy",
+					"temperature": 26.0,
+					"humidity": 0.74,
+					"wind_speed": 5.0
+				}
+			},
+			{
+				"date": "2021/06/02",
+				"info": {
+					"weather": "Rainy",
+					"temperature": 26.0,
+					"humidity": 0.74,
+					"wind_speed": 6.0
+				}
+			},
+			{
+				"date": "2021/06/03",
+				"info": {
+					"weather": "Stormy",
+					"temperature": 26.0,
+					"humidity": 0.75,
+					"wind_speed": 10.0
+				}
+			},
+			{
+				"date": "2021/06/04",
+				"info": {
+					"weather": "Rainy",
+					"temperature": 26.0,
+					"humidity": 0.71,
+					"wind_speed": 13.0
+				}
+			},
+			{
+				"date": "2021/06/05",
+				"info": {
+					"weather": "Rainy",
+					"temperature": 26.0,
+					"humidity": 0.7,
+					"wind_speed": 16.0
+				}
+			}
+		]
+	},
+	{
+		"city_id": 27776,
+		"city_name": "Dong Nai",
+		"date_weather": [
+			{
+				"date": "2021/05/30",
+				"info": {
+					"weather": "Sunny",
+					"temperature": 34.0,
+					"humidity": 0.84,
+					"wind_speed": 6.0
+				}
+			},
+			{
+				"date": "2021/05/31",
+				"info": {
+					"weather": "Cloudy",
+					"temperature": 33.0,
+					"humidity": 0.74,
+					"wind_speed": 13.0
+				}
+			},
+			{
+				"date": "2021/06/01",
+				"info": {
+					"weather": "Lightning",
+					"temperature": 34.0,
+					"humidity": 0.73,
+					"wind_speed": 11.0
+				}
+			},
+			{
+				"date": "2021/06/02",
+				"info": {
+					"weather": "Lightning",
+					"temperature": 33.0,
+					"humidity": 0.75,
+					"wind_speed": 10.0
+				}
+			},
+			{
+				"date": "2021/06/03",
+				"info": {
+					"weather": "Rainy",
+					"temperature": 33.0,
+					"humidity": 0.75,
+					"wind_speed": 11.0
+				}
+			},
+			{
+				"date": "2021/06/04",
+				"info": {
+					"weather": "Rainy",
+					"temperature": 33.0,
+					"humidity": 0.71,
+					"wind_speed": 14.0
+				}
+			},
+			{
+				"date": "2021/06/05",
+				"info": {
+					"weather": "Lightning",
+					"temperature": 33.0,
+					"humidity": 0.75,
+					"wind_speed": 16.0
+				}
+			}
+		]
 	}
 ]

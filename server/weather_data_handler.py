@@ -24,12 +24,12 @@ class Forecast:
             assert weatherInfo[0] in ["Sunny", "Cloudy", "Sunny + Cloudy", "Rainy", "Stormy", "Lightning"], "Invalid weather type"
             self.weather = weatherInfo[0]
             self.temperature = weatherInfo[1]
-            assert weatherInfo[2] >= 0 and weatherInfo[2] <= 1, "Wrong humidity value"
+            assert weatherInfo[2] >= 0 and weatherInfo[2] <= 1, "Invalid humidity value"
             self.humidity = weatherInfo[2]
-            assert weatherInfo[3] >= 0
+            assert weatherInfo[3] >= 0, "Invalid wind speed value"
             self.wind_speed = weatherInfo[3]
         except AssertionError as e:
-            raise ValueError("Wrong value for a object member")
+            raise ValueError(e)
 
     @staticmethod
     def FromDict(adict):
@@ -270,6 +270,10 @@ class WeatherDataModifier(WeatherDataHandler):
             else:
                 return super().default(o)
 
+    def __init__(self, jsonPath):
+        super().__init__(jsonPath)
+        self.changed = False
+
     def __del__(self):
         pass
 
@@ -285,6 +289,7 @@ class WeatherDataModifier(WeatherDataHandler):
         self.backup_dict = None
         if super().LoadDatabase():
             self.backup_dict = copy.deepcopy(self.city_list)
+            self.changed = False
             return True
         else:
             self.city_list = []
@@ -307,6 +312,7 @@ class WeatherDataModifier(WeatherDataHandler):
                     json.dump(self.backup_dict, bfp, indent='\t', cls=WeatherDataModifier.JSONEncoder)
             with open(self.datafilepath, "w") as fp:
                 json.dump(self.city_list, fp, indent='\t', cls=WeatherDataModifier.JSONEncoder)
+            self.changed = False
             return True
         except Exception as e:
             print(e)
@@ -327,6 +333,7 @@ class WeatherDataModifier(WeatherDataHandler):
             new_city = City(city_name,self.IdGetter(city_name))
             self.city_list.append(new_city)
             self.id_lookup[new_city.id] = len(self.city_list) - 1
+            self.changed = True
             return True, new_city.id
         except:
             return False, None
@@ -346,6 +353,7 @@ class WeatherDataModifier(WeatherDataHandler):
         try:
             city = self.city_list[self.id_lookup[cityid]]
             city.AddForecast(date, forecast, errorOnDuplicate=False, override=True)
+            self.changed = True
             return True
         except KeyError as e:
             print('City does not exists')
@@ -354,9 +362,10 @@ class WeatherDataModifier(WeatherDataHandler):
             print(e)
             return False
         except Exception as e:
+            print(e)
             return False
 
-    def AddForcastByValues(self, cityid, date:date, weatherInfoTuple):
+    def AddForecastByValues(self, cityid, date:date, weatherInfoTuple):
         '''
         Add a forecast in form of a 4-tuple for a certain date to a city having cityid
         Parameters:
@@ -370,8 +379,10 @@ class WeatherDataModifier(WeatherDataHandler):
         '''
         try:
             forecast = Forecast(weatherInfoTuple)
+            self.changed = True
             return self.AddForecastForCity(cityid, date, forecast)
         except Exception as e:
+            print(e)
             return False
 
     def RemoveForecast(self, cityid, date:date):
@@ -384,7 +395,7 @@ class WeatherDataModifier(WeatherDataHandler):
         try:
             city = self.city_list[self.id_lookup[cityid]]
             city.RemoveForecast(date)
-            print(city.ToDict())
+            self.changed = True
             return True
         except:
             return False
@@ -406,6 +417,8 @@ class WeatherDataModifier(WeatherDataHandler):
             # Fix id_lookup
             for i in range(cityindex, len(self.city_list)):
                 self.id_lookup[self.city_list[i].id] = i
+
+            self.changed = True
             return True
         except KeyError as e:
             print("The city does not exists")
@@ -439,7 +452,6 @@ if __name__ == '__main__':
     JSON_PATH = os.path.join(Path(__file__).parent.absolute(),"data\\weather_data.json")
 
     a = WeatherDataModifier(JSON_PATH)
-    f = Forecast(('sunny', 32.3, 0.45, 29.3))
     a.LoadDatabase()
-    a.AddForecastForCity(35687, date(2021,5,19), f)
+    print(a.FetchForcastsByCity(8548,fromDate=date(2021,5,30)))
     a.SaveDatabase()
