@@ -9,6 +9,6 @@ WEATHER ALL <date: YYYY/MM/DD>      --> SUCCEEDED <weather data in json>
 WEATHER RECENT <city_id> <count>    --> SUCCEEDED <city_name> <weather data in json>
                                         Call json.loads to get a dictionary, in form of { 'YYYY/MM/DD': (weather, temperature, humidity, wind_speed) }
                                     --> FAILED NO CITYID
-                                    --> FAILED
+                                    --> FAILED VALUE ERROR
 A weather call before LOGIN?        --> FAILED NOT LOGGED IN
 DISCONNECT                          --> X

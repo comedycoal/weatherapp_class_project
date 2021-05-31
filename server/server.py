@@ -211,7 +211,7 @@ class MessagingHandler:
             except ConnectionResetError as e:
                 # This thread should now close
                 reqQueue.put((self.id, id, b'DISCONNECT'))
-                log.exception(f"Abrupt disconnection occured while listening for client {self.id}'s requests. The connection will effectively close")
+                log.info(f"Abrupt disconnection occured while listening for client {self.id}'s requests. The connection will effectively close")
                 break
             except Exception as e:
                 # Please handle errors
@@ -577,26 +577,22 @@ class ServerProgram:
                                 
                             elif mode == b'RECENT':
                                 city_id, count = ServerProgram.SplitOnce(param, errorOnNoTrail=False)
-                                good_id = True
+                                good_values = True
                                 try:
                                     city_id = int(city_id.decode(FORMAT))
+                                    count = 7 if not count else int(count.decode(FORMAT))
                                 except:
                                     status = b'FAILED'
-                                    reply = b'NO CITYID'
-                                    good_id = False
+                                    reply = b'VALUE ERROR'
+                                    good_values = False
 
-                                if good_id:
-                                    if not count:
-                                        count = 7
-                                    else:
-                                        count = int(count.decode(FORMAT))
-                                    fetchstate = b'FAILED'
+                                if good_values:
+                                    fetchstate = False
                                     res = None
                                     with self.weatherDatabaseLock:
                                         fetchstate, res = self.weatherDataHandler.FetchForcastsByCity(city_id, datetime.date.today(), count)
-                                    if fetchstate:
-                                        status = b'SUCCEEDED'
-                                        reply = json.dumps(res).encode(FORMAT)
+                                    status = b'SUCCEEDED' if fetchstate else b'FAILED'
+                                    reply = json.dumps(res).encode(FORMAT) if fetchstate else b'NO CITYID'
                     else:
                         status = b'FAILED'
                         reply = b'NOT LOGGED IN'

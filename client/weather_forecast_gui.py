@@ -17,9 +17,11 @@ class WeatherWindow(object):
         self.name_label.hide()
         self.function_label.hide()
         self.view_button.hide()
+        self.view_button_2.hide()
         self.func1_button.hide()
         self.func2_button.hide()
         self.city_box.hide()
+        self.city_id_box.hide()
         self.date_box.hide()
         self.date_table.hide()
         self.weather_layout_background.hide()
@@ -62,9 +64,11 @@ class WeatherWindow(object):
     def onReturn(self):
         self.function_label.show()
         self.view_button.hide()
+        self.view_button_2.hide()
         self.func1_button.show()
         self.func2_button.show()
         self.city_box.hide()
+        self.city_id_box.hide()
         self.date_box.hide()
         self.date_table.hide()
         self.weather_layout_background.hide()
@@ -109,29 +113,50 @@ class WeatherWindow(object):
         self.func1_button.hide()
         self.func2_button.hide()
         self.view_button.clicked.disconnect()
+        self.view_button.setGeometry(QtCore.QRect(180, 120, 81, 41))
         self.view_button.clicked.connect(lambda:self.onViewCity(MainWindow, clientProgram))
         self.view_button.show()
+        self.view_button_2.show()
         self.return_button.show()
         self.city_box.show()
+        self.city_id_box.show()
     
-    def onViewCity(self, MainWindow, clientProgram):
-        city_name = self.city_box.text()
-        if self.weatherdata == None:
-            QtWidgets.QMessageBox.about(MainWindow, "", "Chưa có dữ liệu, vui lòng chọn chức năng còn lại trước")
-            self.onReturn()
+    def onViewCity(self, MainWindow, clientProgram:ClientProgram, usesID=True):
+        city_id = None
+        if usesID:
+            try:
+                city_id = int(self.city_id_box.text())
+            except:
+                QtWidgets.QMessageBox.about(MainWindow, "", "ID không hợp lệ")
+                return
         else:
+            city_name = self.city_box.text()
+            duplicate = False
             city_id = None
-            for data in self.weatherdata:
-                if data[1] == city_name:
-                    city_id = data[0]
-            if city_id == None:
-                QtWidgets.QMessageBox.about(MainWindow, "", "Sai tên thành phố hoặc không có dữ liệu về thành phố")
-            else:
-                state, data = clientProgram.RequestWeatherDate7DaysOf(city_id)
-                if state != clientProgram.State.SUCCEEDED:
-                    QtWidgets.QMessageBox.about(MainWindow, "", "Lỗi kết nối tới server")
-                else:
-                    self.viewCity(MainWindow, data)
+            if self.weatherdata:
+                for data in self.weatherdata:
+                    if data[1] == city_name:
+                        if not city_id:
+                            city_id = data[0]  
+                        else:
+                            duplicate = True    
+                if city_id and duplicate:
+                    QtWidgets.QMessageBox.about(MainWindow, "", f"Nhiều hơn một thành phố với tên {city_name}. Thành phố sau đây có ID {city_id}. Vui lòng truy vấn bằng ID nếu không đúng.")
+
+        if city_id == None:
+            QtWidgets.QMessageBox.about(MainWindow, "", "Sai tên thành phố hoặc không có dữ liệu về thành phố. Vui lòng truy vấn bằng ID.")
+        else:
+            state, data = clientProgram.RequestWeatherDate7DaysOf(city_id)
+            if state == clientProgram.State.BADCONNECTION or state == clientProgram.State.BADMESSAGE:
+                QtWidgets.QMessageBox.about(MainWindow, "", "Lỗi kết nối tới server")
+            elif state == clientProgram.State.FAILED:
+                QtWidgets.QMessageBox.about(MainWindow, "", "Không tìm thấy thành phố.")
+            elif state == clientProgram.State.SUCCEEDED:
+                _translate = QtCore.QCoreApplication.translate
+                city_name = data[0]
+                self.city_box.setText(_translate("MainWindow", city_name))
+                self.city_id_box.setText(_translate("MainWindow", str(city_id)))
+                self.viewCity(MainWindow, data)
 
     def showWidgets(self):
         self.weather_layout_background.show()
@@ -172,7 +197,6 @@ class WeatherWindow(object):
         self.date7.show()
 
     def updateForecast(self, data):
-
         city_name = data[0]
         weather_by_date_dict = data[1]
         weather = ["Sunny", "Cloudy", "Sunny + Cloudy", "Rainy", "Stormy", "Lightning",]
@@ -245,7 +269,9 @@ class WeatherWindow(object):
         self.function_label.hide()
         self.func1_button.hide()
         self.func2_button.hide()
+        self.view_button_2.hide()
         self.view_button.clicked.disconnect()
+        self.view_button.setGeometry(QtCore.QRect(311, 120, 81, 41))
         self.view_button.clicked.connect(lambda:self.onViewDate(MainWindow, clientProgram))
         self.view_button.show()
         self.return_button.show()
@@ -260,9 +286,11 @@ class WeatherWindow(object):
         else:
             state, self.weatherdata = clientProgram.RequestWeatherDataAll(day)
         
-        if state != clientProgram.State.SUCCEEDED:
+        if state == clientProgram.State.BADCONNECTION or state == clientProgram.State.BADMESSAGE:
             QtWidgets.QMessageBox.about(MainWindow, "", "Lỗi kết nối tới server")
-        else:
+        elif state == clientProgram.State.FAILED:
+            QtWidgets.QMessageBox.about(MainWindow, "", "Ngày không hợp lệ.")
+        elif state == clientProgram.State.SUCCEEDED:
             print(self.weatherdata)
             while (self.date_table.rowCount() > 1):
                 self.date_table.removeRow(1)
@@ -382,14 +410,24 @@ class WeatherWindow(object):
         self.func2_button.show()
 
         self.city_box = QtWidgets.QLineEdit(MainWindow)
-        self.city_box.setGeometry(QtCore.QRect(60, 120, 240, 41))
+        self.city_box.setGeometry(QtCore.QRect(490, 120, 240, 41))
         font = QtGui.QFont()
         font.setFamily("Helvetica")
         font.setPointSize(11)
         self.city_box.setFont(font)
         self.city_box.setObjectName("city_box")
-        self.city_box.setText(_translate("MainWindow", "Nhập thành phố (không dấu)"))
+        self.city_box.setText(_translate("MainWindow", "Thành phố (không dấu)"))
         self.city_box.hide()
+
+        self.city_id_box = QtWidgets.QLineEdit(MainWindow)
+        self.city_id_box.setGeometry(QtCore.QRect(60, 120, 100, 41))
+        font = QtGui.QFont()
+        font.setFamily("Helvetica")
+        font.setPointSize(11)
+        self.city_id_box.setFont(font)
+        self.city_id_box.setObjectName("city_id_box")
+        self.city_id_box.setText(_translate("MainWindow", "ID"))
+        self.city_id_box.hide()
 
         self.date_box = QtWidgets.QLineEdit(MainWindow)
         self.date_box.setGeometry(QtCore.QRect(60, 120, 231, 41))
@@ -402,7 +440,7 @@ class WeatherWindow(object):
         self.date_box.hide()
 
         self.view_button = QtWidgets.QPushButton(MainWindow)
-        self.view_button.setGeometry(QtCore.QRect(320, 120, 81, 41))
+        self.view_button.setGeometry(QtCore.QRect(311, 120, 81, 41))
         font = QtGui.QFont()
         font.setFamily("Helvetica")
         font.setPointSize(11)
@@ -413,6 +451,18 @@ class WeatherWindow(object):
         self.view_button.clicked.connect(lambda:self.onViewCity(MainWindow, clientProgram))
         self.view_button.clicked.connect(lambda:self.onViewDate(MainWindow, clientProgram))
         self.view_button.hide()
+
+        self.view_button_2 = QtWidgets.QPushButton(MainWindow)
+        self.view_button_2.setGeometry(QtCore.QRect(750, 120, 81, 41))
+        font = QtGui.QFont()
+        font.setFamily("Helvetica")
+        font.setPointSize(11)
+        font.setItalic(True)
+        self.view_button_2.setFont(font)
+        self.view_button_2.setObjectName("view_button_2")
+        self.view_button_2.setText(_translate("MainWindow", "Xem"))
+        self.view_button_2.clicked.connect(lambda:self.onViewCity(MainWindow, clientProgram, usesID=False))
+        self.view_button_2.hide()
 
         self.date_table = QtWidgets.QTableWidget(MainWindow)
         self.date_table.setGeometry(QtCore.QRect(60, 190, 771, 281))

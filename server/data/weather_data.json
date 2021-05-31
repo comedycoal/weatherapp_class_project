@@ -289,5 +289,47 @@
 				}
 			}
 		]
+	},
+	{
+		"city_id": 8549,
+		"city_name": "Vung Tau",
+		"date_weather": [
+			{
+				"date": "2021/05/31",
+				"info": {
+					"weather": "Lightning",
+					"temperature": 34.0,
+					"humidity": 0.8,
+					"wind_speed": 11.0
+				}
+			},
+			{
+				"date": "2021/06/01",
+				"info": {
+					"weather": "Lightning",
+					"temperature": 34.0,
+					"humidity": 0.8,
+					"wind_speed": 11.0
+				}
+			},
+			{
+				"date": "2021/06/02",
+				"info": {
+					"weather": "Lightning",
+					"temperature": 34.0,
+					"humidity": 0.8,
+					"wind_speed": 11.0
+				}
+			},
+			{
+				"date": "2021/06/03",
+				"info": {
+					"weather": "Lightning",
+					"temperature": 34.0,
+					"humidity": 0.8,
+					"wind_speed": 11.0
+				}
+			}
+		]
 	}
 ]

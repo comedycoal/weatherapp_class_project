@@ -115,8 +115,7 @@ class ClientProgram:
             self.connected = True
             return True
         except Exception as e:
-            log.exception("Exception occured")
-            log.info("No connection established")
+            log.exception("Exception occured. No connection established.")
             return False
 
     def Disconnect(self):
@@ -318,7 +317,7 @@ class ClientProgram:
         except AssertionError as e:
             log.info(f"Couldn't send full message of length {length} to server. Only {bytes_sent}")
         except Exception as e:
-            log.exception(f"Counld not send message of length {length} to server.")
+            log.exception(f"Could not send message of length {length} to server.")
 
         return False, -1
     
@@ -353,7 +352,7 @@ class ClientProgram:
                         log.info(f"Client has received message of length {message_length}")
             except ConnectionResetError as e:
                 self.disconnectEvent.set()
-                log.exception(f"Abrupt disconnection occured while listening for messages. The connection will effectively close")
+                log.info(f"Abrupt disconnection occured while listening for messages. The connection will effectively close")
                 break
             except Exception as e:
                 # Please handle errors, maybe?
